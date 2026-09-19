@@ -1,10 +1,13 @@
 /**
  * 3D Drosophila Anatomy & Janelia Connectome Neural Viewport
  *
- * Direct Janelia & FlyWire Integration:
+ * Full Adult Drosophila Anatomical Model:
  * 1. Micro-CT anatomical adult Drosophila meshes (TuragaLab/flybody):
- *    - drosophila_head.obj, thorax.obj, abdomen_1.obj, abdomen_2.obj, abdomen_3.obj
- *    - wing_left.obj, wing_right.obj, antenna_left.obj, antenna_right.obj, haltere_left.obj, haltere_right.obj
+ *    - drosophila_head.obj + ruby compound eyes + antennae (antenna_left.obj, antenna_right.obj)
+ *    - thorax.obj (dorsal scutum, scutellum, thoracic pleura)
+ *    - drosophila_abdomen.obj (Full 8-segment closed abdomen, dorsal + ventral plates)
+ *    - drosophila_legs.obj (Full 6 articulated jointed legs: coxa, femur, tibia, tarsi)
+ *    - wing_left.obj, wing_right.obj, haltere_left.obj, haltere_right.obj
  * 2. Janelia Research Campus JRC2018 Template Brain (natverse/nat.flybrains):
  *    - jrc2018_brain.obj holographic glassmorphic neuropil shell
  * 3. Authentic FlyWire & Hemibrain Connectome Skeletons (connectome_neurons.json):
@@ -44,12 +47,11 @@ class ConnectomeScene {
     const height = this.container.clientHeight || window.innerHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x030712, 0.035);
+    this.scene.fog = new THREE.FogExp2(0x030712, 0.032);
 
-    this.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-    // Camera framing the fly in dramatic 3/4 laboratory perspective
-    this.camera.position.set(2.8, 1.8, 4.2);
-    this.camera.lookAt(0, 0.0, 0);
+    this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    this.camera.position.set(2.8, 1.6, 4.4);
+    this.camera.lookAt(0, -0.1, 0);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(width, height);
@@ -58,38 +60,35 @@ class ConnectomeScene {
     this.renderer.toneMappingExposure = 1.35;
     this.container.appendChild(this.renderer.domElement);
 
-    // Multi-Point Holographic Lighting
-    const ambientLight = new THREE.AmbientLight(0x0f172a, 1.9);
+    // Balanced Laboratory Lighting for True Chitin Cuticle Colors
+    const ambientLight = new THREE.AmbientLight(0x1e293b, 1.8);
     this.scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0x38bdf8, 2.4); // Cyan synaptic key light
-    keyLight.position.set(4, 7, 4);
-    this.scene.add(keyLight);
+    const warmKey = new THREE.DirectionalLight(0xfef08a, 2.0); // Warm key highlight
+    warmKey.position.set(4, 7, 5);
+    this.scene.add(warmKey);
 
-    const crimsonAlarm = new THREE.DirectionalLight(0xf43f5e, 1.6); // Crimson escape alarm light
-    crimsonAlarm.position.set(-4, -2, -3);
-    this.scene.add(crimsonAlarm);
+    const cyanSynapse = new THREE.DirectionalLight(0x38bdf8, 1.6); // Cyan synaptic light
+    cyanSynapse.position.set(-4, -2, -3);
+    this.scene.add(cyanSynapse);
 
-    const emeraldRim = new THREE.DirectionalLight(0x10b981, 1.5); // Emerald dopamine rim light
-    emeraldRim.position.set(0, 5, -4);
+    const emeraldRim = new THREE.DirectionalLight(0x10b981, 1.2); // Emerald rim light
+    emeraldRim.position.set(0, 5, -5);
     this.scene.add(emeraldRim);
 
     // Fly Master Hierarchy
-    // Root handles world positioning, hover levitation, and idle yaw rotation
     this.flyRoot = new THREE.Group();
-    this.flyRoot.position.set(0, -0.15, 0);
-    this.flyRoot.rotation.y = -0.42; // Hero 3/4 turn towards camera
+    this.flyRoot.position.set(0, -0.1, 0);
+    this.flyRoot.rotation.y = -0.45; // Hero 3/4 diagonal orientation
     this.scene.add(this.flyRoot);
 
-    // FlyGroup transforms FlyBody coordinate system (Z=dorsal, -X=head, Y=lateral)
+    // Transform FlyBody coordinate system (Z=dorsal, -X=head, Y=lateral)
     // into Three.js coordinate system (Y=up, +Z=forward to camera, X=lateral)
     this.flyGroup = new THREE.Group();
     this.flyGroup.rotation.x = -Math.PI / 2;
     this.flyGroup.rotation.z = -Math.PI / 2;
-    // Scale slightly for optimum framing in viewport
-    this.flyGroup.scale.set(0.9, 0.9, 0.9);
-    // Center the thoracic mass at origin (FlyBody thorax center is around X=0, Y=0, Z=1.18)
-    this.flyGroup.position.set(0, -1.05, 0);
+    this.flyGroup.scale.set(0.85, 0.85, 0.85);
+    this.flyGroup.position.set(0, -1.0, 0);
     this.flyRoot.add(this.flyGroup);
   }
 
@@ -110,29 +109,38 @@ class ConnectomeScene {
 
     const loader = new THREE.OBJLoader();
 
-    // Natural Drosophila melanogaster amber chitin PBR material
+    // Natural Drosophila melanogaster warm amber-tan chitin cuticle
     const chitinMat = new THREE.MeshStandardMaterial({
-      color: 0x8a5526,
-      roughness: 0.38,
-      metalness: 0.22
+      color: 0x925c27,
+      roughness: 0.32,
+      metalness: 0.15
     });
 
+    // Darker jointed chitin for legs and thoracic sutures
+    const legMat = new THREE.MeshStandardMaterial({
+      color: 0x6b3f15,
+      roughness: 0.38,
+      metalness: 0.18
+    });
+
+    // Deep ruby-red compound eye
     const eyeMat = new THREE.MeshStandardMaterial({
-      color: 0x9f1239, // Drosophila ruby-red compound eye
-      roughness: 0.16,
+      color: 0x9f1239,
+      roughness: 0.15,
       metalness: 0.35,
       emissive: 0x881337,
       emissiveIntensity: 0.55
     });
 
+    // Translucent iridescent wing membrane
     this.wingMat = new THREE.MeshPhysicalMaterial({
-      color: 0xe2e8f0,
+      color: 0xf1f5f9,
       transmission: 0.88,
       opacity: 0.85,
       transparent: true,
-      roughness: 0.12,
+      roughness: 0.10,
       ior: 1.45,
-      specularIntensity: 1.0,
+      specularIntensity: 1.2,
       side: THREE.DoubleSide
     });
 
@@ -140,6 +148,7 @@ class ConnectomeScene {
       loader.load(`/assets/${file}`, (obj) => {
         obj.traverse((child) => {
           if (child.isMesh) {
+            if (child.geometry) child.geometry.computeVertexNormals();
             child.material = material;
             child.castShadow = true;
             child.receiveShadow = true;
@@ -159,19 +168,25 @@ class ConnectomeScene {
       this.buildCompoundEyes(eyeMat);
     });
 
-    // 2. Segmented Abdomen
-    loadMesh('abdomen_1.obj', chitinMat, (obj) => { this.loadedParts.abdomen1 = obj; });
-    loadMesh('abdomen_2.obj', chitinMat, (obj) => { this.loadedParts.abdomen2 = obj; });
-    loadMesh('abdomen_3.obj', chitinMat, (obj) => { this.loadedParts.abdomen3 = obj; });
+    // 2. Complete 8-Segment Adult Drosophila Abdomen (Dorsal + Ventral Plates)
+    loadMesh('drosophila_abdomen.obj', chitinMat, (obj) => {
+      this.loadedParts.abdomen = obj;
+      console.log('Complete 8-segment Drosophila abdomen loaded.');
+    });
 
-    // 3. Sensory Antennae & Halteres
+    // 3. Complete Articulated Micro-CT Legs (T1, T2, T3)
+    loadMesh('drosophila_legs.obj', legMat, (obj) => {
+      this.loadedParts.legs = obj;
+      console.log('Complete articulated micro-CT legs loaded.');
+    });
+
+    // 4. Sensory Antennae & Halteres
     loadMesh('antenna_left.obj', chitinMat, (obj) => { this.loadedParts.antLeft = obj; });
     loadMesh('antenna_right.obj', chitinMat, (obj) => { this.loadedParts.antRight = obj; });
     loadMesh('haltere_left.obj', chitinMat, (obj) => { this.loadedParts.haltereLeft = obj; });
     loadMesh('haltere_right.obj', chitinMat, (obj) => { this.loadedParts.haltereRight = obj; });
 
-    // 4. Articulated Wings with independent pivot groups for 120-150 Hz wingbeats
-    // Left Wing Pivot (FlyBody hinge: X=0.0, Y=-0.46, Z=1.32)
+    // 5. Articulated Wings with independent pivot groups for 120-150 Hz wingbeats
     this.leftWingPivot = new THREE.Group();
     this.leftWingPivot.position.set(0.0, -0.46, 1.32);
     this.flyGroup.add(this.leftWingPivot);
@@ -183,7 +198,6 @@ class ConnectomeScene {
       this.loadedParts.wingLeft = obj;
     });
 
-    // Right Wing Pivot (FlyBody hinge: X=0.0, Y=0.46, Z=1.32)
     this.rightWingPivot = new THREE.Group();
     this.rightWingPivot.position.set(0.0, 0.46, 1.32);
     this.flyGroup.add(this.rightWingPivot);
@@ -194,13 +208,9 @@ class ConnectomeScene {
       this.rightWingPivot.add(obj);
       this.loadedParts.wingRight = obj;
     });
-
-    // 5. Build articulated legs for grooming and escape jump kicks
-    this.buildLegs(chitinMat);
   }
 
   buildCompoundEyes(eyeMat) {
-    // Drosophila ommatidia compound eye ellipsoids positioned on the lateral head capsule
     const eyeGeo = new THREE.SphereGeometry(0.24, 16, 16);
     eyeGeo.scale(1.1, 0.8, 1.3);
 
@@ -215,42 +225,10 @@ class ConnectomeScene {
     this.flyGroup.add(this.rightEye);
   }
 
-  buildLegs(legMat) {
-    this.legs = [];
-    const legPositions = [
-      { x: -0.35, y: -0.30, z: 0.98, side: -1, isFore: true },  // Left Foreleg (Grooming)
-      { x: -0.35, y:  0.30, z: 0.98, side:  1, isFore: true },  // Right Foreleg
-      { x:  0.00, y: -0.38, z: 0.92, side: -1, isFore: false }, // Left Midleg
-      { x:  0.00, y:  0.38, z: 0.92, side:  1, isFore: false }, // Right Midleg
-      { x:  0.28, y: -0.32, z: 0.88, side: -1, isFore: false, isHind: true }, // Left Hindleg (Escape kick)
-      { x:  0.28, y:  0.32, z: 0.88, side:  1, isFore: false, isHind: true }  // Right Hindleg
-    ];
-
-    legPositions.forEach((pos) => {
-      const legRoot = new THREE.Group();
-      legRoot.position.set(pos.x, pos.y, pos.z);
-
-      const femur = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.7, 8), legMat);
-      femur.position.set(0, pos.side * 0.25, -0.25);
-      femur.rotation.x = pos.side * 0.6;
-      legRoot.add(femur);
-
-      const tibia = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.015, 0.8, 8), legMat);
-      tibia.position.set(0, pos.side * 0.5, -0.75);
-      tibia.rotation.x = -pos.side * 0.4;
-      legRoot.add(tibia);
-
-      this.flyGroup.add(legRoot);
-      this.legs.push({ group: legRoot, isFore: pos.isFore, isHind: pos.isHind, side: pos.side });
-    });
-  }
-
   loadAuthenticJaneliaConnectome() {
-    // Connectome Brain Group sits inside the Head capsule at (-0.83, 0, 1.17)
     this.brainGroup = new THREE.Group();
     this.brainGroup.position.set(-0.83, 0.0, 1.17);
     this.brainGroup.scale.set(0.36, 0.36, 0.36);
-    // Align Janelia brain mesh with the head capsule
     this.brainGroup.rotation.set(0, 0, Math.PI / 2);
     this.flyGroup.add(this.brainGroup);
 
@@ -287,9 +265,6 @@ class ConnectomeScene {
         });
 
         this.brainGroup.add(obj);
-        console.log('Janelia JRC2018 Template Brain Shell loaded into Connectome Viewport.');
-      }, undefined, (err) => {
-        console.warn('Could not load jrc2018_brain.obj:', err);
       });
     }
 
@@ -332,7 +307,6 @@ class ConnectomeScene {
       this.brainGroup.add(lineMesh);
       this.neuronLines.push({ mesh: lineMesh, baseColor: color, idx });
 
-      // Glowing Soma sphere at root
       if (neuron.soma) {
         const somaGeo = new THREE.SphereGeometry(neuron.soma.radius * 0.9, 10, 10);
         const somaMat = new THREE.MeshBasicMaterial({
@@ -345,8 +319,6 @@ class ConnectomeScene {
         this.brainGroup.add(somaMesh);
       }
     });
-
-    console.log(`Rendered ${neurons.length} authentic connectome neurons in WebGL.`);
   }
 
   buildConnectomeNeuropils() {
@@ -385,7 +357,7 @@ class ConnectomeScene {
     this.mbRight.rotation.z = -0.5;
     this.neuropilGroup.add(this.mbRight);
 
-    // 3. Giant Fiber Descending Escape Tract (Neon Crimson through neck to thoracic ganglion)
+    // 3. Giant Fiber Descending Escape Tract
     const gfGeo = new THREE.CylinderGeometry(0.035, 0.02, 1.6, 8);
     this.gfMat = new THREE.MeshBasicMaterial({
       color: 0xef4444,
@@ -397,7 +369,7 @@ class ConnectomeScene {
     this.giantFiberTract.rotation.z = Math.PI / 2;
     this.neuropilGroup.add(this.giantFiberTract);
 
-    // 4. Action Potential Spark Particles (Qwen InstancedMesh)
+    // 4. Action Potential Spark Particles
     const sparkCount = 140;
     const sparkGeo = new THREE.SphereGeometry(0.016, 6, 6);
     this.sparkMat = new THREE.MeshBasicMaterial({
@@ -432,7 +404,7 @@ class ConnectomeScene {
   }
 
   buildFallbackAnatomy() {
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8a5526, roughness: 0.4 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x925c27, roughness: 0.35 });
     const thoraxGeo = new THREE.SphereGeometry(0.7, 16, 16);
     thoraxGeo.scale(1.2, 0.9, 1.0);
     this.flyGroup.add(new THREE.Mesh(thoraxGeo, bodyMat));
@@ -444,7 +416,6 @@ class ConnectomeScene {
     this.wingbeatHz = state.dlmnFrequency || 120.0;
     this.giantFiberActive = state.giantFiberSpike || false;
 
-    // Pulse Giant Fiber Tract on Action Potential Spike
     if (this.giantFiberActive) {
       this.gfMat.opacity = 1.0;
       this.gfMat.color.setHex(0xff0033);
@@ -453,19 +424,16 @@ class ConnectomeScene {
       this.gfMat.opacity = Math.max(0.2, this.gfMat.opacity - 0.04);
     }
 
-    // Modulate Kenyon cell Mushroom Body glow by Dopamine level
     if (this.mbLeft && this.mbLeft.material) {
       this.mbLeft.material.opacity = 0.3 + this.dopamineGlow * 0.7;
     }
 
-    // Modulate connectome neuron tract brightness
     this.neuronLines.forEach((item) => {
       if (item.mesh && item.mesh.material) {
         item.mesh.material.opacity = 0.5 + this.dopamineGlow * 0.4 + this.octopamineGlow * 0.3;
       }
     });
 
-    // Update Emotional States
     if (this.animationState !== 'ESCAPE_JUMP') {
       if (this.dopamineGlow > 0.6) {
         this.setAnimationState('GROOMING', 2600);
@@ -484,7 +452,6 @@ class ConnectomeScene {
     requestAnimationFrame(this.animate);
     const time = performance.now() * 0.001;
 
-    // Decay State Timer
     if (this.stateTimer > 0) {
       this.stateTimer -= 16.6;
       if (this.stateTimer <= 0) {
@@ -493,13 +460,13 @@ class ConnectomeScene {
     }
 
     // 1. Gentle Idle Orbit & Respiration Levitation
-    this.flyRoot.rotation.y = -0.42 + Math.sin(time * 0.5) * 0.15;
-    this.flyRoot.position.y = -0.15 + Math.sin(time * 1.6) * 0.05;
+    this.flyRoot.rotation.y = -0.45 + Math.sin(time * 0.5) * 0.12;
+    this.flyRoot.position.y = -0.1 + Math.sin(time * 1.6) * 0.04;
 
-    // 2. Abdomen Segments Rhythmic Contraction
-    if (this.loadedParts.abdomen1) {
+    // 2. Complete Abdomen Rhythmic Respiration
+    if (this.loadedParts.abdomen) {
       const breath = 1.0 + Math.sin(time * 3.2) * 0.035;
-      this.loadedParts.abdomen1.scale.set(1.0, breath, breath);
+      this.loadedParts.abdomen.scale.set(1.0, breath, breath);
     }
 
     // 3. Central Complex Rotation
@@ -507,50 +474,32 @@ class ConnectomeScene {
       this.ellipsoidBody.rotation.z += 0.025;
     }
 
-    // 4. Wing Motion (Left and Right pivots)
+    // 4. Wing Motion
     if (this.leftWingPivot && this.rightWingPivot) {
       if (this.animationState === 'AGITATED') {
-        // High frequency buzzing (120-150 Hz flutter around wing hinge)
-        const flutter = Math.sin(time * (this.wingbeatHz * 0.2)) * 0.35;
+        const flutter = Math.sin(time * (this.wingbeatHz * 0.2)) * 0.45;
         this.leftWingPivot.rotation.y = flutter;
         this.rightWingPivot.rotation.y = -flutter;
       } else if (this.animationState === 'ESCAPE_JUMP') {
-        // Violent backflip snap open
-        this.leftWingPivot.rotation.y = 0.6;
-        this.rightWingPivot.rotation.y = -0.6;
+        this.leftWingPivot.rotation.y = 0.65;
+        this.rightWingPivot.rotation.y = -0.65;
       } else {
-        // Idle wing quiver
         const quiver = Math.sin(time * 2.5) * 0.05;
         this.leftWingPivot.rotation.y = quiver;
         this.rightWingPivot.rotation.y = -quiver;
       }
     }
 
-    // 5. Leg Articulation
-    if (this.legs) {
-      this.legs.forEach((leg) => {
-        if (leg.isFore && this.animationState === 'GROOMING') {
-          // Forelegs rub together over head & antennae
-          leg.group.rotation.y = Math.sin(time * 14.0) * 0.35 + (leg.side * 0.2);
-        } else if (leg.isHind && this.animationState === 'ESCAPE_JUMP') {
-          // Powerful Giant Fiber hindleg kick
-          leg.group.rotation.x = 0.85;
-        } else {
-          leg.group.rotation.y = Math.sin(time * 2.0 + leg.side) * 0.05;
-        }
-      });
-    }
-
-    // 6. Giant Fiber Escape Jump Dynamics
+    // 5. Escape Jump Dynamics
     if (this.animationState === 'ESCAPE_JUMP') {
-      this.flyRoot.rotation.x = -0.4;
+      this.flyRoot.rotation.x = -0.35;
       this.flyRoot.position.z = -0.3;
     } else {
       this.flyRoot.rotation.x = 0;
       this.flyRoot.position.z = 0;
     }
 
-    // 7. Action Potential Sparks Animation
+    // 6. Action Potential Sparks Animation
     if (this.sparks && this.sparkData) {
       const dummy = new THREE.Object3D();
       for (let i = 0; i < this.sparkData.length; i++) {
