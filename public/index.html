@@ -138,6 +138,41 @@
         <p class="tier-desc" id="tierDesc">Solid backend / distributed systems engineer at profitable unicorn</p>
       </div>
 
+      <!-- Neural Verdict Panel - shows after each answer -->
+      <div id="neuralVerdictPanel" class="neural-verdict-panel hidden">
+        <div class="verdict-header">
+          <span class="verdict-fly">&#x1F99F;</span>
+          <span class="verdict-title">FLY BRAIN VERDICT</span>
+          <span id="verdictCircuitBadge" class="verdict-circuit-badge">ANALYZING</span>
+        </div>
+        <div class="verdict-metrics">
+          <div class="verdict-metric">
+            <div class="verdict-metric-label">DOPAMINE (PAM)</div>
+            <div class="verdict-bar-track"><div id="verdictDaBar" class="verdict-bar da"></div></div>
+            <span id="verdictDaVal" class="verdict-metric-val">0%</span>
+          </div>
+          <div class="verdict-metric">
+            <div class="verdict-metric-label">OCTOPAMINE (OA)</div>
+            <div class="verdict-bar-track"><div id="verdictOctBar" class="verdict-bar oct"></div></div>
+            <span id="verdictOctVal" class="verdict-metric-val">0%</span>
+          </div>
+          <div class="verdict-metric">
+            <div class="verdict-metric-label">RING COHERENCE (EB)</div>
+            <div class="verdict-bar-track"><div id="verdictRingBar" class="verdict-bar ring"></div></div>
+            <span id="verdictRingVal" class="verdict-metric-val">0%</span>
+          </div>
+          <div class="verdict-metric">
+            <div class="verdict-metric-label">FIRING RATE (GF)</div>
+            <div class="verdict-bar-track"></div>
+            <span id="verdictFiringVal" class="verdict-metric-val big">0 Hz</span>
+          </div>
+        </div>
+        <div id="verdictGfAlert" class="verdict-gf-alert hidden">
+          &#x26A1; GIANT FIBER ESCAPE REFLEX - AVERSIVE SIGNAL MAXIMUM
+        </div>
+        <div class="verdict-critique" id="verdictCritique">Awaiting neural evaluation...</div>
+      </div>
+
       <!-- Interview Question Area -->
       <div class="interview-box">
         <div class="interviewer-header">
@@ -200,7 +235,7 @@
         <h3 style="color: #fff; font-size: 18px; font-weight: 800; margin: 0;">Google AI Studio API Key</h3>
       </div>
       <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 18px;">
-        Enter your free <strong>Google AI Studio (Gemini Flash)</strong> key. Dr. Drosophila will dynamically evaluate your answers semantically and invent targeted follow-up grilling questions.
+        Enter your free <strong>Google AI Studio (Gemini Flash)</strong> key to get dynamic follow-up questions. <em>Note: The fly brain still decides your LPA � Gemini only writes the next question.</em>
       </p>
       <input type="password" id="geminiKeyInput" placeholder="AIzaSy..." style="width: 100%; background: #030712; border: 1px solid #334155; color: #fff; padding: 12px 14px; border-radius: 8px; font-family: monospace; font-size: 14px; margin-bottom: 18px; outline: none;">
       <div style="display: flex; justify-content: space-between; align-items: center;">

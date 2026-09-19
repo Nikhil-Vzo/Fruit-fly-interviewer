@@ -159,6 +159,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const deltaStr = (evaluation.delta >= 0 ? `+${evaluation.delta}` : `${evaluation.delta}`) + ' LPA';
     updateLPAUI(evaluation.newLPA, evaluation.delta, evaluation.tier, deltaStr);
 
+
+    // NEURAL VERDICT PANEL: make fly brain output visible
+    (function showVerdictPanel() {
+      var panel = document.getElementById('neuralVerdictPanel');
+      if (!panel) return;
+      panel.classList.remove('hidden', 'fly-active', 'gf-active');
+      var label = evaluation.circuitLabel || 'EVALUATED';
+      var cb = document.getElementById('verdictCircuitBadge');
+      if (cb) { cb.textContent = label; cb.className = 'verdict-circuit-badge ' + label; }
+      var daPct  = Math.round((evaluation.dopamineLevel   || 0) * 100);
+      var octPct = Math.round((evaluation.octopamineLevel || 0) * 100);
+      var ringPct = Math.min(100, Math.round((evaluation.ringCoherence || 0) * 200));
+      var db = document.getElementById('verdictDaBar');   if (db)  db.style.width  = daPct  + '%';
+      var dv = document.getElementById('verdictDaVal');   if (dv)  dv.textContent  = daPct  + '%';
+      var ob = document.getElementById('verdictOctBar');  if (ob)  ob.style.width  = octPct + '%';
+      var ov = document.getElementById('verdictOctVal');  if (ov)  ov.textContent  = octPct + '%';
+      var rb = document.getElementById('verdictRingBar'); if (rb)  rb.style.width  = ringPct + '%';
+      var rv = document.getElementById('verdictRingVal'); if (rv)  rv.textContent  = ringPct + '%';
+      var fv = document.getElementById('verdictFiringVal'); if (fv) fv.textContent = (evaluation.firingRate||0).toFixed(0) + ' Hz';
+      var gfa = document.getElementById('verdictGfAlert');
+      if (gfa) {
+        if (evaluation.giantFiberTriggered) { gfa.classList.remove('hidden'); panel.classList.add('gf-active'); }
+        else { gfa.classList.add('hidden'); panel.classList.add('fly-active'); }
+      }
+      var vc = document.getElementById('verdictCritique');
+      if (vc) vc.textContent = evaluation.critique || '';
+    })();
     // Append to Audit Log
     addHistoryEntry(deltaStr, evaluation.delta, evaluation.critique, evaluation.isLLM, evaluation.isFlyBrain);
 
