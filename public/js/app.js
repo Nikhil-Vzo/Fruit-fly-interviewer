@@ -1,5 +1,5 @@
 ﻿/**
- * FlyWire HR â€” Main Client Application Orchestrator
+ * FlyWire HR � Main Client Application Orchestrator
  * Integrates Biophysics ODE Loop, Three.js Connectome Viewport,
  * Oscilloscope HUD, Speech/Audio Controller, and Socket.io Gateway.
  */
@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onSpeakingStateChange: (isSpeaking) => {
       if (isSpeaking) {
-        duckingBadge.textContent = 'ðŸ”‡ DUCKED (FLY TALKING)';
+        duckingBadge.textContent = '?? DUCKED (FLY TALKING)';
         duckingBadge.classList.add('ducked');
       } else {
-        duckingBadge.textContent = 'ðŸŽ™ï¸ MIC ACTIVE';
+        duckingBadge.textContent = '?? MIC ACTIVE';
         duckingBadge.classList.remove('ducked');
       }
     }

@@ -218,6 +218,7 @@ html, body {
 
 /* ── VIEWPORT ─────────────────────────────────────────── */
 .viewport-wrapper {
+  min-height: 220px;
   position: relative;
   background: radial-gradient(ellipse at center, rgba(10,20,60,0.9) 0%, rgba(2,8,20,0.98) 100%);
   border: 1px solid var(--border);
@@ -677,3 +678,46 @@ html, body {
   transition:all 0.2s;
 }
 .btn-save:hover { box-shadow:0 0 14px rgba(16,185,129,0.35); }
+/* ── NEURON INSPECTOR CARD ──────────────────────────────── */
+.neuron-inspector {
+  position: fixed;
+  bottom: 80px; left: 20px; z-index: 500;
+  background: rgba(10,16,40,0.96);
+  border: 1px solid rgba(56,189,248,0.35);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  min-width: 220px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  transition: all 0.3s ease;
+}
+.neuron-inspector.hidden { display: none; }
+.inspector-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.inspector-header span {
+  font-family: var(--mono); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.1em; color: var(--accent);
+}
+.inspector-close {
+  background: transparent; border: none; color: var(--muted);
+  cursor: pointer; font-size: 12px; padding: 2px 6px;
+  border-radius: 4px; transition: all 0.15s;
+}
+.inspector-close:hover { color: var(--red); }
+.inspector-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 4px 0;
+  font-family: var(--mono); font-size: 9px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.inspector-row span:first-child { color: var(--muted); letter-spacing: 0.07em; }
+.inspector-row span:last-child  { color: var(--text); font-weight: 600; }
+/* Three.js inserts its own canvas into #threeContainer */
+#threeContainer canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 220px !important;
+}

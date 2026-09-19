@@ -41,10 +41,10 @@
           <span class="llm-badge" id="llmBadge">&#x1F99F; CONNECTING...</span>
         </div>
       </div>
-      <div class="viewport-wrapper">
+      <div class="viewport-wrapper" id="threeContainer">
         <div class="fly-mood-tag" id="flyMoodTag">MOOD: NEUTRAL</div>
-        <div class="wingbeat-tag" id="wingbeatTag">WINGBEAT: 144.6 Hz</div>
-        <canvas id="connectomeCanvas" class="connectome-canvas"></canvas>
+        <div class="wingbeat-tag" id="wingbeatTag"><span id="dlmnHzTag">WINGBEAT:</span> 144.6 Hz</div>
+        
       </div>
       <div class="circuit-selector-bar" id="circuitSelectorBar">
         <button class="circuit-chip active" data-id="all">ALL CIRCUITS</button>
@@ -176,6 +176,18 @@
       </div>
     </section>
   </main>
+  <!-- Neuron Inspector Card (shown on 3D neuron click) -->
+  <div id="neuronInspectorCard" class="neuron-inspector hidden">
+    <div class="inspector-header">
+      <span id="inspectorTitle">NEURON DETAILS</span>
+      <button id="inspectorCloseBtn" class="inspector-close">&#x2715;</button>
+    </div>
+    <div class="inspector-row"><span>FLYWIRE ID</span><span id="inspectorFlywireId">—</span></div>
+    <div class="inspector-row"><span>NEUROPIL</span><span id="inspectorNeuropil">—</span></div>
+    <div class="inspector-row"><span>ROLE</span><span id="inspectorRole">—</span></div>
+    <div class="inspector-row"><span>TRANSMITTER</span><span id="inspectorTransmitter">—</span></div>
+    <div class="inspector-row"><span>SYNAPSES</span><span id="inspectorSynapses">—</span></div>
+  </div>
   <script src="js/biophysics-engine.js"></script>
   <script src="js/lpa-engine.js"></script>
   <script src="js/telemetry-hud.js"></script>
