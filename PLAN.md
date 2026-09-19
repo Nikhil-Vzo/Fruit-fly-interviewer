@@ -8,7 +8,7 @@ This document outlines the **complete status of the project**, confirming what h
 
 ### The Core Objective
 Build a real-time technical mock interviewer in `C:\Users\nikhi\Downloads\fruit fly interview` where:
-1. **Electrophysiological Brain**: A 68-neuron biological circuit of *Drosophila melanogaster* simulates real biophysical differential equations (Izhikevich integrate-and-fire ODEs + Tsodyks-Markram synaptic plasticity), not random numbers.
+1. **Electrophysiological Brain**: A 24-coupled ODE biophysical circuit of *Drosophila melanogaster* (Izhikevich Giant Fiber escape neuron + Tsodyks-Markram synaptic STF + 16-column continuous recurrent ring attractor + Michaelis-Menten monoaminergic kinetics) solved every 0.5ms with zero synthetic noise.
 2. **Authentic Anatomy & Connectome**: Renders genuine open-source 3D assets:
    - Janelia Research Campus JRC2018 adult template brain (`natverse/nat.flybrains`).
    - Authentic FlyWire / FAFB electron microscopy neuron reconstructions (`PyMaid` SWC traces).
@@ -36,7 +36,7 @@ Build a real-time technical mock interviewer in `C:\Users\nikhi\Downloads\fruit 
 | **CRT Oscilloscope HUD** | Canvas HUD plotting the live membrane potential ($V_m$) of the Giant Fiber escape circuit and the Central Complex polar ring attractor. | ✅ Active |
 | **LPA Salary Rubric** | Dynamic scoring engine with anti-pattern traps, non-tech admission disqualification, begging penalties, and high-tech architectural concept evaluation. | ✅ Active |
 | **Audio Ducking** | Browser Web Audio API & Web Speech STT that mutes microphone input whenever the insect synthesizer speaks. | ✅ Active |
-| **Test Suite** | 11/11 passing unit tests verifying mathematical fixed points, peak spike resets, numerical NaN clamping, and LPA rubrics. | ✅ 100% Passing |
+| **Test Suite** | 19/19 passing automated tests verifying mathematical fixed points, excitatory synaptic polarity, quantal vesicle conservation, continuous ring attractor dynamics, deterministic rubrics, and multi-tenancy isolation. | ✅ 100% Passing |
 
 ---
 

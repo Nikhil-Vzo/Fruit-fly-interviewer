@@ -20,8 +20,8 @@ const FATAL_PATTERNS = [
   /store.*password.*plain/i,
   /try.*catch.*whole/i,
   /try.*catch.*(db|database)/i,
-  /o\(n!\)/i,
-  /sleep\(\d+\)/i,
+  /(o\(n!\)|factorial time complexity|\bo\(n factorial\))/i,
+  /(while\s*\(.*?\)\s*\{[^}]*sleep|for\s*\(.*?\)\s*\{[^}]*sleep|sleep\(\d+\).*instead of.*(await|wait|event|mutex|lock|polling|promise)|busy.*wait|thread\.sleep.*mutex)/i,
   /drop table/i,
   /global variable.*auth/i,
   /no need for indexing/i,
@@ -244,6 +244,7 @@ class LPAEngine {
     }
 
     if (nonTechDetected) {
+      // Force drop down to 2.4 LPA (Unpaid Chai Intern)
       delta = -(Math.max(5.0, this.currentLPA - 2.4));
       stressStimulus = 1.0;
       giantFiberTriggered = true;
@@ -251,13 +252,13 @@ class LPAEngine {
     }
     // 2. Begging / Pity appeals
     else if (hasBegging || (text && BEGGING_PATTERNS.some(p => p.test(text)))) {
-      delta = -(7.5 + Math.random() * 2.5);
+      delta = -8.5; // Deterministic penalty
       stressStimulus = 0.9;
       critique = "⚠️ EMOTIONAL MANIPULATION: Pity appeals and begging detected ('I am poor / higher package'). Compensation is strictly a function of distributed systems mastery, not sympathy. Massive salary penalty.";
     }
     // 3. Fatal anti-patterns & bugs
     else if (hasFatalBug || (text && FATAL_PATTERNS.some(p => p.test(text)))) {
-      delta = -(10.0 + Math.random() * 5.0);
+      delta = -12.5; // Deterministic penalty
       stressStimulus = 1.0;
       giantFiberTriggered = true;
       critique = "💥 CRITICAL BLUNDER: Candidate proposed an anti-pattern or security catastrophe. Giant Fiber escape reflex engaged!";

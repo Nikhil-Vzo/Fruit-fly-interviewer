@@ -28,6 +28,28 @@ test('LPAEngine - Fatal answer severely penalizes LPA and triggers Giant Fiber a
   assert.ok(evaluation.stressStimulus >= 0.9, 'Stress stimulus should max out');
 });
 
+test('LPAEngine - Penalties are 100% deterministic and reproducible across evaluations', () => {
+  const lpa1 = new LPAEngine(20.0);
+  const lpa2 = new LPAEngine(20.0);
+  const fatalText = "We disable security checks and store plaintext passwords";
+
+  const res1 = lpa1.evaluateResponse(lpa1.analyzeContent(fatalText));
+  const res2 = lpa2.evaluateResponse(lpa2.analyzeContent(fatalText));
+
+  assert.equal(res1.delta, res2.delta, 'Fatal penalty must be strictly deterministic');
+  assert.equal(res1.newLPA, res2.newLPA, 'New LPA must match exactly');
+  assert.equal(res1.delta, -12.5, 'Expected deterministic fatal penalty of -12.5');
+
+  const lpa3 = new LPAEngine(15.0);
+  const lpa4 = new LPAEngine(15.0);
+  const begText = "please give me a higher package I am poor";
+
+  const res3 = lpa3.evaluateResponse(lpa3.analyzeContent(begText));
+  const res4 = lpa4.evaluateResponse(lpa4.analyzeContent(begText));
+  assert.equal(res3.delta, res4.delta, 'Begging penalty must be strictly deterministic');
+  assert.equal(res3.delta, -8.5, 'Expected deterministic begging penalty of -8.5');
+});
+
 test('LPAEngine - Begging / pity appeal is heavily penalized and never rewarded', () => {
   const lpa = new LPAEngine(15.0);
   const text = "please give me a higher package I am poor I really need this money";
@@ -49,6 +71,22 @@ test('LPAEngine - Non-tech admission plummets candidate to Unpaid Chai Intern', 
   assert.equal(lpa.getTier().tierName, 'Unpaid Chai Intern');
   assert.match(evaluation.critique, /NON-TECHNICAL ADMISSION/i);
   assert.equal(evaluation.giantFiberTriggered, true);
+});
+
+test('LPAEngine - Legitimate retry backoff with sleep is not penalized as fatal bug', () => {
+  const lpa = new LPAEngine(15.0);
+  const text = "We handle downstream failures using exponential backoff with jitter and sleep(100) between retry attempts";
+  const analysis = lpa.analyzeContent(text);
+  assert.equal(analysis.hasFatalBug, false, 'Legitimate retry backoff sleep must not trigger fatal anti-pattern');
+});
+
+test('LPAEngine - Catches factorial time complexity variants', () => {
+  const lpa = new LPAEngine(15.0);
+  const t1 = lpa.analyzeContent("The brute-force recursive search runs in O(N!) factorial time complexity");
+  assert.equal(t1.hasFatalBug, true, 'Must detect factorial complexity blunder');
+
+  const t2 = lpa.analyzeContent("This algorithm has factorial time complexity under all permutations");
+  assert.equal(t2.hasFatalBug, true, 'Must detect textual factorial complexity mention');
 });
 
 test('LPAEngine - Long non-technical rambling is penalized, not rewarded', () => {

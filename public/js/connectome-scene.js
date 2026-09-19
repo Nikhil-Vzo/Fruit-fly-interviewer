@@ -30,6 +30,7 @@ class ConnectomeScene {
     this.loadedParts = {};
     this.neuronLines = [];
     this.actionSparks = [];
+    this.dummy = new THREE.Object3D(); // Hoisted to eliminate per-frame GC pressure
 
     this.initThree();
     this.buildConnectomeNeuropils();
@@ -38,6 +39,7 @@ class ConnectomeScene {
 
     this.animate = this.animate.bind(this);
     requestAnimationFrame(this.animate);
+    if (this.controls) this.controls.update();
 
     window.addEventListener('resize', () => this.onResize());
   }
@@ -59,6 +61,23 @@ class ConnectomeScene {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.35;
     this.container.appendChild(this.renderer.domElement);
+
+    // Interactive OrbitControls for 360-degree anatomical exploration
+    if (typeof THREE.OrbitControls !== 'undefined') {
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.enableDamping = true;
+      this.controls.dampingFactor = 0.06;
+      this.controls.maxDistance = 14.0;
+      this.controls.minDistance = 1.2;
+      this.controls.target.set(0, -0.1, 0);
+    }
+    this.renderer.domElement.style.cursor = 'grab';
+    this.renderer.domElement.addEventListener('mousedown', () => {
+      this.renderer.domElement.style.cursor = 'grabbing';
+    });
+    this.renderer.domElement.addEventListener('mouseup', () => {
+      this.renderer.domElement.style.cursor = 'grab';
+    });
 
     // Balanced Laboratory Lighting for True Chitin Cuticle Colors
     const ambientLight = new THREE.AmbientLight(0x1e293b, 1.8);
@@ -381,16 +400,16 @@ class ConnectomeScene {
     this.sparks = new THREE.InstancedMesh(sparkGeo, this.sparkMat, sparkCount);
 
     this.sparkData = [];
-    const dummy = new THREE.Object3D();
+    // Reusing hoisted this.dummy to avoid GC stutter
     for (let i = 0; i < sparkCount; i++) {
       const pos = new THREE.Vector3(
         (Math.random() - 0.5) * 0.8,
         (Math.random() - 0.5) * 0.8,
         (Math.random() - 0.5) * 0.6
       );
-      dummy.position.copy(pos);
-      dummy.updateMatrix();
-      this.sparks.setMatrixAt(i, dummy.matrix);
+      this.dummy.position.copy(pos);
+      this.dummy.updateMatrix();
+      this.sparks.setMatrixAt(i, this.dummy.matrix);
       this.sparkData.push({
         pos,
         vel: new THREE.Vector3(
@@ -512,9 +531,9 @@ class ConnectomeScene {
             (Math.random() - 0.5) * 0.3
           );
         }
-        dummy.position.copy(item.pos);
-        dummy.updateMatrix();
-        this.sparks.setMatrixAt(i, dummy.matrix);
+        this.dummy.position.copy(item.pos);
+        this.dummy.updateMatrix();
+        this.sparks.setMatrixAt(i, this.dummy.matrix);
       }
       this.sparks.instanceMatrix.needsUpdate = true;
     }

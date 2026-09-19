@@ -8,23 +8,31 @@ A real-time technical mock interviewer powered by authentic *Drosophila melanoga
 
 ## Key Highlights
 
-- **Pure Biophysical ODE Simulation (Zero Synthetic Data)**:
-  - 68-neuron Curated Behavioral Subcircuit: Antennal Lobe glomeruli (`DA1`, `DL3`), Mushroom Body Kenyon Cells (`MB-KC`), Central Complex (`PB-EB` ring attractor), and descending Giant Fiber escape interneurons.
-  - Solved every 16.6ms via 4th-order Runge-Kutta / Euler integration of Izhikevich non-linear membrane dynamics:
-    $$\frac{dv}{dt} = 0.04v^2 + 5v + 140 - u + I$$
-    $$\frac{du}{dt} = a(bv - u)$$
-  - Tsodyks-Markram Short-Term Synaptic Plasticity (STP) modeling depression ($R$) and calcium-dependent facilitation ($u_{\text{rel}}$).
-  - Octopamine (arousal / stress) and Dopamine (reward / learning) monoaminergic kinetics.
+- **Pure Biophysical Dynamical System (24 Coupled ODEs)**:
+  - **Izhikevich Giant Fiber Escape Interneuron**: Real-time non-linear membrane potential ($V, u$) with canonical $+30\text{ mV}$ spike peak reset ($c = -60\text{ mV}, d = 8.0$):
+    $\frac{dv}{dt} = 0.04v^2 + 5v + 140 - u + I_{\text{syn}}$
+    $\frac{du}{dt} = a(bv - u)$
+  - **Excitatory Conductance-Based Synapse**: $I_{\text{syn}} = g_{\text{syn}} \cdot y \cdot (E_{\text{rev}} - V)$ (strictly depolarizing inward drive at resting potential $-65\text{ mV}$).
+  - **Tsodyks-Markram Short-Term Facilitation (STF)**: 3-pool vesicle dynamics (available $x$, active cleft $y$, refractory $z$) with strict mass conservation ($x + y + z = 1.0$) and activity-dependent release probability $u_{\text{rel}}$.
+  - **Central Complex 16-Column Recurrent Ring Attractor**: 16 continuous coupled ODEs simulating Ellipsoid Body wedges with Mexican-hat lateral inhibition and continuous heading angle integration:
+    $\tau_{\text{ring}} \frac{dr_i}{dt} = -r_i + f\left(\sum_j W_{ij} r_j + I_i^{\text{ext}}\right)$
+  - **Michaelis-Menten Monoamine Kinetics**: Octopamine (stress/agitation) and Dopamine (reward/courtship) clearance:
+    $\frac{d[X]}{dt} = S_{\text{stim}} \cdot k_{\text{rel}} - \frac{V_{\max} [X]}{K_m + [X]}$
+  - Solved at $dt = 0.5\text{ ms}$ via Forward Euler integration with strict NaN clamps and numerical stability boundaries.
 
 - **Authentic Janelia & FlyWire 3D Connectome Anatomy**:
   - **Janelia JRC2018 Unisex Template Brain**: Raided directly from `natverse/nat.flybrains` and rendered as a holographic glassmorphic neuropil shell.
   - **FlyWire & Hemibrain EM Reconstructed Neurons**: Raided from PyMaid FAFB and Hemibrain electron microscopy reconstructions (`24622.swc`, `1536947502.swc`, etc.) rendered as glowing axonal tracts with additive blending.
-  - **Micro-CT Cephalic & Thoracic Meshes**: Sourced from `TuragaLab/flybody` adult Drosophila micro-CT models (`drosophila_head.obj`, `thorax.obj`, segmented abdomen, articulated wings, antennae, and halteres).
+  - **Micro-CT Anatomy & 360° Interactive OrbitControls**: Sourced from `TuragaLab/flybody` adult Drosophila micro-CT models (`drosophila_head.obj`, `thorax.obj`, full 8-segment abdomen, 6 jointed legs, wings, and antennae). Fully rotatable and zoomable via OrbitControls with zero-allocation InstancedMesh action potential sparks.
 
 - **Audio & Hardware Reliability**:
   - Native Web Speech API with automatic watchdog recovery.
   - **Audio Ducking**: Microphone input automatically mutes while the insect formant synthesizer speaks to eliminate acoustic feedback loops.
   - Tested at 60 FPS on NVIDIA RTX 2050 / Windows 11.
+
+- **Isolated Multi-Tenancy & DoS Hardening**:
+  - Per-connection session isolation in Socket.io (no shared state across concurrent candidate tabs).
+  - Strict 4,000-character payload sanitization and submission debouncing.
 
 - **Dynamic LPA Compensation & Tech Tiers**:
   - Real-time keyword & concept analysis maps answers to Indian Tech salary tiers:
@@ -54,7 +62,7 @@ cd Fruit-fly-interviewer
 # Install dependencies
 npm install
 
-# Run unit tests (11 passing biophysical & LPA unit tests)
+# Run unit tests (19 passing biophysical, LPA, and multi-tenancy tests)
 npm test
 
 # Launch the server

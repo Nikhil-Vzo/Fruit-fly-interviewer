@@ -36,12 +36,14 @@ const QUESTIONS = [
   }
 ];
 
-const lpaEngine = new LPAEngine(15.0);
-
 io.on('connection', (socket) => {
   console.log(`[Socket.io] Candidate connected: ${socket.id}`);
 
-  // Send initial state & first question
+  // Isolated per-candidate interview session (Fixes multi-tenancy singleton bug)
+  const lpaEngine = new LPAEngine(15.0);
+  let lastEvaluationTime = 0;
+
+  // Send initial state & first question to this specific candidate
   socket.emit('init', {
     currentLPA: lpaEngine.getCurrentLPA(),
     tier: lpaEngine.getTier(),
@@ -50,19 +52,26 @@ io.on('connection', (socket) => {
     totalQuestions: QUESTIONS.length
   });
 
-  // Handle interim candidate speech (fast path)
+  // Handle interim candidate speech (fast path with length guard)
   socket.on('candidate_interim', (data) => {
-    const text = data.text || '';
+    const text = (data && data.text ? String(data.text).slice(0, 1000) : '');
     const interimAnalysis = lpaEngine.analyzeInterim(text);
     socket.emit('interim_feedback', interimAnalysis);
   });
 
-  // Handle final candidate response (authoritative evaluation)
+  // Handle final candidate response (authoritative evaluation with DoS protection & rate limit)
   socket.on('candidate_response', (data) => {
-    const text = data.text || '';
-    const questionIndex = data.questionIndex || 0;
+    const now = Date.now();
+    if (now - lastEvaluationTime < 250) {
+      return; // Debounce rapid spam submissions
+    }
+    lastEvaluationTime = now;
 
-    // Use intelligent concept & rubric analysis (no naive length checks)
+    // Strict input length sanitization (max 4000 characters)
+    const text = (data && data.text ? String(data.text).slice(0, 4000) : '');
+    const questionIndex = typeof data?.questionIndex === 'number' ? data.questionIndex : 0;
+
+    // Use intelligent concept & rubric analysis
     const analysis = lpaEngine.analyzeContent(text);
     const evalResult = lpaEngine.evaluateResponse(analysis);
 
@@ -86,8 +95,16 @@ io.on('connection', (socket) => {
       totalQuestions: QUESTIONS.length
     });
   });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket.io] Candidate disconnected: ${socket.id}`);
+  });
 });
 
-server.listen(PORT, () => {
-  console.log(`[FlyWire HR] Server running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`[FlyWire HR] Server running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { app, server, io, QUESTIONS };
