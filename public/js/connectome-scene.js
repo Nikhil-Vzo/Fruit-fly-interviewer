@@ -218,12 +218,12 @@ class ConnectomeScene {
   buildLegs(legMat) {
     this.legs = [];
     const legPositions = [
-      { x: -0.4, y: -0.35, z: 0.8, side: -1, isFore: true },  // Left Foreleg (Grooming)
-      { x: -0.4, y:  0.35, z: 0.8, side:  1, isFore: true },  // Right Foreleg
-      { x:  0.0, y: -0.45, z: 0.7, side: -1, isFore: false }, // Left Midleg
-      { x:  0.0, y:  0.45, z: 0.7, side:  1, isFore: false }, // Right Midleg
-      { x:  0.3, y: -0.40, z: 0.6, side: -1, isFore: false, isHind: true }, // Left Hindleg (Escape kick)
-      { x:  0.3, y:  0.40, z: 0.6, side:  1, isFore: false, isHind: true }  // Right Hindleg
+      { x: -0.35, y: -0.30, z: 0.98, side: -1, isFore: true },  // Left Foreleg (Grooming)
+      { x: -0.35, y:  0.30, z: 0.98, side:  1, isFore: true },  // Right Foreleg
+      { x:  0.00, y: -0.38, z: 0.92, side: -1, isFore: false }, // Left Midleg
+      { x:  0.00, y:  0.38, z: 0.92, side:  1, isFore: false }, // Right Midleg
+      { x:  0.28, y: -0.32, z: 0.88, side: -1, isFore: false, isHind: true }, // Left Hindleg (Escape kick)
+      { x:  0.28, y:  0.32, z: 0.88, side:  1, isFore: false, isHind: true }  // Right Hindleg
     ];
 
     legPositions.forEach((pos) => {
