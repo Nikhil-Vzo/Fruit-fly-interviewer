@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FlyWire HR â€” Drosophila Connectome Real-Time LPA Interviewer</title>
+  <title>FlyWire HR &mdash; Drosophila Connectome LPA Interviewer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -15,72 +15,48 @@
 </head>
 <body>
   <div class="crt-overlay"></div>
-
   <header class="app-header">
     <div class="brand">
-      <div class="logo-icon">ðŸª°âš¡</div>
-      <div>
-        <h1>FLYWIRE HR <span class="badge">CONNECTOME v2.4</span></h1>
-        <p class="subtitle">Drosophila Biophysical Electrophysiology & Market LPA Evaluator</p>
+      <span class="brand-icon">&#x1F99F;</span>
+      <div class="brand-text">
+        <span class="brand-name">FLYWIRE HR</span>
+        <span class="brand-sub">Drosophila Connectome Real-Time LPA Evaluator</span>
       </div>
+      <div class="connectome-badge" id="connectomeBadge">CONNECTOME v2.4</div>
     </div>
-    <div class="header-status">
-      <div class="status-indicator live"><span class="dot"></span> SYNAPTIC BUS ACTIVE</div>
-      <button id="btnPlaySineSong" class="btn-audio-demo" title="Authentic Clemens/Murthy Lab Courtship Sine Song (155 Hz fundamental + 6 Hz vibrato)">ðŸŽµ 155Hz SINE</button>
-      <button id="btnPlayPulseSong" class="btn-audio-demo" title="Authentic Drosophila Agitated Pulse Train (280 Hz clicks with 35 ms IPI)">âš¡ 280Hz PULSE</button>
-      <button id="resetBtn" class="btn-secondary">Reset Evaluation</button>
-    </div>
+    <nav class="header-nav">
+      <span class="nav-status" id="synapticBusStatus">&#x25CF; SYNAPTIC BUS ACTIVE</span>
+      <span class="nav-pill" id="courtshipBadge">155Hz SINE</span>
+      <span class="nav-pill" id="pulseBadge">280Hz PULSE</span>
+      <button class="btn-reset" id="resetBtn">Reset Evaluation</button>
+      <button class="btn-key" id="openGeminiModal" title="Configure Gemini API key">&#x1F511;</button>
+    </nav>
   </header>
-
-  <main class="dashboard-grid">
-    <!-- LEFT PANEL: CONNECTOME BIOPHYSICS LABORATORY -->
+  <main class="app-main">
     <section class="panel panel-left">
       <div class="panel-header">
-        <h2>ðŸ”¬ CONNECTOME LABORATORY TELEMETRY</h2>
-        <span class="sub-badge">24-ODE BIOPHYSICAL CONNECTOME</span>
-        <span id="llmStatusBadge" class="llm-badge">◯ CONNECTING...</span>
+        <h2>&#x1F9EC; CONNECTOME TELEMETRY</h2>
+        <div class="panel-header-right">
+          <span class="badge-ode">24-ODE BIOPHYSICAL</span>
+          <span class="llm-badge" id="llmBadge">&#x1F99F; CONNECTING...</span>
+        </div>
       </div>
-
-      <!-- 3D Three.js Viewport -->
       <div class="viewport-wrapper">
-        <div id="threeContainer" class="three-container"></div>
-        <div class="viewport-overlay">
-          <div class="overlay-tag" id="flyMoodTag">MOOD: ATTENTIVE (IDLE)</div>
-          <div class="overlay-tag-right" id="dlmnHzTag">WINGBEAT: 120.0 Hz</div>
-        </div>
-
-        <!-- Floating Interactive Connectome Inspector -->
-        <div class="neuron-inspector-card hidden" id="neuronInspectorCard">
-          <div class="inspector-header">
-            <span class="inspector-title" id="inspectorTitle">AL-PN1 (Projection Neuron)</span>
-            <button class="inspector-close" id="inspectorCloseBtn" title="Close Inspector">&times;</button>
-          </div>
-          <div class="inspector-meta-row">
-            <span class="meta-badge" id="inspectorFlywireId">FlyWire: 720575940624622</span>
-            <span class="meta-badge transmitter" id="inspectorTransmitter">ACh</span>
-          </div>
-          <div class="inspector-desc" id="inspectorRole">Encodes candidate technical keywords from sensory auditory input.</div>
-          <div class="inspector-stats">
-            <div class="stat-col"><span class="stat-lbl">NEUROPIL</span><span class="stat-val" id="inspectorNeuropil">AL â†’ MB-CA</span></div>
-            <div class="stat-col"><span class="stat-lbl">SYNAPSES</span><span class="stat-val" id="inspectorSynapses">412 Pre / 1.8k Post</span></div>
-          </div>
-          <button class="btn-stimulate" id="btnStimulateNeuron">âš¡ Optogenetic Depolarize (+15 nA)</button>
-        </div>
-
-        <!-- Sleek Connectome Circuit Filter Selector -->
-        <div class="circuit-selector-bar" id="circuitSelectorBar">
-          <button class="circuit-chip active" data-id="all">ALL CIRCUITS</button>
-          <button class="circuit-chip" data-id="fafb_24622">AL-PN1 (ACh)</button>
-          <button class="circuit-chip" data-id="fafb_27295">MB-KC (Memory)</button>
-          <button class="circuit-chip" data-id="fafb_35246">LHON (Valence)</button>
-          <button class="circuit-chip" data-id="fafb_57311">ExR2 (Heading)</button>
-          <button class="circuit-chip" data-id="hemibrain_1536947502">DNp01 (Giant Fiber)</button>
-          <button class="circuit-chip" data-id="hemibrain_5813038889">PPL1 (Dopamine)</button>
-          <button class="circuit-chip" data-id="hemibrain_754534424">OA-VUM (Arousal)</button>
-        </div>
+        <div class="fly-mood-tag" id="flyMoodTag">MOOD: NEUTRAL</div>
+        <div class="wingbeat-tag" id="wingbeatTag">WINGBEAT: 144.6 Hz</div>
+        <canvas id="connectomeCanvas" class="connectome-canvas"></canvas>
       </div>
-
-      <!-- Oscilloscope & Quantitative Metrics -->
+      <div class="circuit-selector-bar" id="circuitSelectorBar">
+        <button class="circuit-chip active" data-id="all">ALL CIRCUITS</button>
+        <button class="circuit-chip" data-id="fafb_24622">AL-PN1 (ACh)</button>
+        <button class="circuit-chip" data-id="fafb_27295">MB-KC (Memory)</button>
+        <button class="circuit-chip" data-id="fafb_35246">LHON (Valence)</button>
+        <button class="circuit-chip" data-id="fafb_57311">ExR2 (Heading)</button>
+        <button class="circuit-chip" data-id="hemibrain_1536947502">DNp01 (Giant Fiber)</button>
+        <button class="circuit-chip" data-id="hemibrain_5813038889">PPL1 (Dopamine)</button>
+        <button class="circuit-chip" data-id="hemibrain_754534424">OA-VUM (Arousal)</button>
+      </div>
+      <button class="btn-stimulate" id="btnStimulateNeuron">&#x26A1; Optogenetic Depolarize (+15 nA)</button>
       <div class="telemetry-grid">
         <div class="telemetry-card">
           <div class="card-title">VESICLE TURNOVER</div>
@@ -90,7 +66,7 @@
         <div class="telemetry-card">
           <div class="card-title">GIANT FIBER Vm</div>
           <div class="card-value" id="membraneVm">-65.0 <span class="unit">mV</span></div>
-          <div class="card-desc">Threshold: -38mV | Peak: +30mV</div>
+          <div class="card-desc">Threshold: -38mV &nbsp;|&nbsp; Peak: +30mV</div>
         </div>
         <div class="telemetry-card">
           <div class="card-title">OCTOPAMINE (STRESS)</div>
@@ -103,42 +79,34 @@
           <div class="progress-bar"><div id="daBar" class="bar-fill reward"></div></div>
         </div>
       </div>
-
-      <!-- Oscilloscope Canvas -->
       <div class="oscilloscope-wrapper">
         <div class="oscilloscope-header">
           <div class="osc-tabs" id="oscTabs">
-            <button class="osc-tab active" data-mode="TRACE">âš¡ GF TRACE (Vm)</button>
-            <button class="osc-tab" data-mode="MATRIX">ðŸ•¸ï¸ CONNECTOME MATRIX</button>
-            <button class="osc-tab" data-mode="STF">ðŸ“ˆ TSODYKS-MARKRAM (STF)</button>
+            <button class="osc-tab active" data-mode="TRACE">&#x26A1; GF TRACE (Vm)</button>
+            <button class="osc-tab" data-mode="MATRIX">&#x25A6; CONNECTOME MATRIX</button>
+            <button class="osc-tab" data-mode="STF">&#x1F4C8; TSODYKS-MARKRAM</button>
           </div>
           <span id="apBadge" class="ap-badge">AP SPIKE: QUIET</span>
         </div>
         <canvas id="oscCanvas" class="osc-canvas"></canvas>
       </div>
     </section>
-
-    <!-- RIGHT PANEL: TECHNICAL INTERVIEW & LIVE LPA TICKER -->
     <section class="panel panel-right">
       <div class="panel-header">
-        <h2>ðŸ’¼ TECHNICAL ASSESSMENT & CTC ENGINE</h2>
+        <h2>&#x1F3AF; TECHNICAL ASSESSMENT &amp; CTC ENGINE</h2>
         <span class="sub-badge" id="questionProgress">Q 1 OF 4</span>
       </div>
-
-      <!-- Hero LPA Display -->
       <div class="lpa-hero-card">
         <div class="lpa-header">PROJECTED MARKET COMPENSATION</div>
         <div class="lpa-value-row">
-          <span class="lpa-currency">â‚¹</span>
+          <span class="lpa-currency">&#x20B9;</span>
           <span id="lpaValue" class="lpa-digits">15.00</span>
           <span class="lpa-unit">LPA</span>
         </div>
         <div id="lpaDeltaTag" class="lpa-delta-tag neutral">STARTING BASELINE</div>
         <div class="tier-pill" id="tierBadge">Mid Product Tier</div>
-        <p class="tier-desc" id="tierDesc">Solid backend / distributed systems engineer at profitable unicorn</p>
+        <p class="tier-desc" id="tierDesc">Solid backend engineer at profitable unicorn</p>
       </div>
-
-      <!-- Neural Verdict Panel - shows after each answer -->
       <div id="neuralVerdictPanel" class="neural-verdict-panel hidden">
         <div class="verdict-header">
           <span class="verdict-fly">&#x1F99F;</span>
@@ -167,45 +135,35 @@
             <span id="verdictFiringVal" class="verdict-metric-val big">0 Hz</span>
           </div>
         </div>
-        <div id="verdictGfAlert" class="verdict-gf-alert hidden">
-          &#x26A1; GIANT FIBER ESCAPE REFLEX - AVERSIVE SIGNAL MAXIMUM
-        </div>
+        <div id="verdictGfAlert" class="verdict-gf-alert hidden">&#x26A1; GIANT FIBER ESCAPE REFLEX &mdash; AVERSIVE SIGNAL MAXIMUM</div>
         <div class="verdict-critique" id="verdictCritique">Awaiting neural evaluation...</div>
       </div>
-
-      <!-- Interview Question Area -->
       <div class="interview-box">
         <div class="interviewer-header">
-          <span class="interviewer-avatar">ðŸª°</span>
+          <span class="interviewer-avatar">&#x1F99F;</span>
           <div>
-            <div class="interviewer-name">Dr. Drosophila (Lead Connectome Recruiter)</div>
-            <div class="question-topic" id="questionTopic">Distributed Systems & Consistency</div>
+            <div class="interviewer-name">Dr. Drosophila &mdash; Lead Connectome Recruiter</div>
+            <div class="question-topic" id="questionTopic">Distributed Systems &amp; Consistency</div>
           </div>
         </div>
         <p class="question-prompt" id="questionPrompt">Loading interview prompt...</p>
       </div>
-
-      <!-- Candidate Input & Speech Stream -->
       <div class="input-section">
         <div class="voice-controls">
           <button id="micBtn" class="btn-mic">
-            <span class="mic-icon">ðŸŽ™ï¸</span>
+            <span class="mic-icon">&#x1F3A4;</span>
             <span id="micText">START SPEAKING</span>
           </button>
           <div class="ducking-indicator" id="duckingBadge">MIC ACTIVE</div>
         </div>
-
         <div class="transcript-display" id="transcriptBox">
-          <span class="placeholder-text">Click "Start Speaking" or type below to answer...</span>
+          <span class="placeholder-text">Click &ldquo;Start Speaking&rdquo; or type below...</span>
         </div>
-
         <form id="textForm" class="text-input-form">
-          <input type="text" id="textInput" placeholder="Type technical explanation or system architecture..." autocomplete="off">
+          <input type="text" id="textInput" placeholder="Type your technical explanation or system architecture..." autocomplete="off">
           <button type="submit" class="btn-submit">Submit Answer</button>
         </form>
       </div>
-
-      <!-- Salary History Transaction Log -->
       <div class="history-section">
         <div class="history-title">SALARY EVALUATION AUDIT LOG</div>
         <div class="history-list" id="historyList">
@@ -218,36 +176,28 @@
       </div>
     </section>
   </main>
-
-  <!-- Load Local Scripts -->
   <script src="js/biophysics-engine.js"></script>
   <script src="js/lpa-engine.js"></script>
   <script src="js/telemetry-hud.js"></script>
   <script src="js/connectome-scene.js"></script>
   <script src="js/speech-audio.js"></script>
   <script src="js/app.js"></script>
-
-  <!-- GOOGLE AI STUDIO API KEY CONFIGURATION MODAL -->
-  <div id="geminiModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-    <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 16px; padding: 28px; max-width: 520px; width: 92%; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <span style="font-size: 24px;">ðŸ”‘</span>
-        <h3 style="color: #fff; font-size: 18px; font-weight: 800; margin: 0;">Google AI Studio API Key</h3>
+  <div id="geminiModal" class="modal-backdrop" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span style="font-size:22px;">&#x1F511;</span>
+        <h3>Google AI Studio API Key</h3>
       </div>
-      <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 18px;">
-        Enter your free <strong>Google AI Studio (Gemini Flash)</strong> key to get dynamic follow-up questions. <em>Note: The fly brain still decides your LPA � Gemini only writes the next question.</em>
-      </p>
-      <input type="password" id="geminiKeyInput" placeholder="AIzaSy..." style="width: 100%; background: #030712; border: 1px solid #334155; color: #fff; padding: 12px 14px; border-radius: 8px; font-family: monospace; font-size: 14px; margin-bottom: 18px; outline: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: #38bdf8; font-size: 12px; text-decoration: underline;">Get free API key from Google AI Studio &rarr;</a>
-        <div style="display: flex; gap: 10px;">
-          <button id="closeGeminiModal" class="btn-secondary" style="padding: 8px 16px;">Cancel</button>
-          <button id="saveGeminiKey" style="background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; padding: 8px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">Save & Activate</button>
+      <p class="modal-desc">Enter your free <strong>Google AI Studio</strong> key for dynamic follow-up questions. <em>The fly brain still decides your LPA &mdash; Gemini only writes the next question.</em></p>
+      <input type="password" id="geminiKeyInput" class="modal-input" placeholder="AIzaSy...">
+      <div class="modal-actions">
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="modal-link">Get free key &rarr;</a>
+        <div style="display:flex;gap:10px;">
+          <button id="closeGeminiModal" class="btn-secondary">Cancel</button>
+          <button id="saveGeminiKey" class="btn-save">Save &amp; Activate</button>
         </div>
       </div>
     </div>
   </div>
-
 </body>
 </html>
-
