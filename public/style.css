@@ -1,5 +1,5 @@
-/* ==========================================================================
-   FlyWire HR — Drosophila Connectome Real-Time LPA Interviewer Stylesheet
+﻿/* ==========================================================================
+   FlyWire HR â€” Drosophila Connectome Real-Time LPA Interviewer Stylesheet
    Dark Glassmorphic Laboratory & Cybernetic Neuroscience Aesthetic
    ========================================================================== */
 
@@ -623,4 +623,244 @@ body {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Interactive Connectome Inspector & Circuit Selector */
+.circuit-selector-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  z-index: 15;
+  scrollbar-width: none;
+  pointer-events: auto;
+  background: rgba(3, 7, 18, 0.65);
+  backdrop-filter: blur(6px);
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.circuit-selector-bar::-webkit-scrollbar {
+  display: none;
+}
+.circuit-chip {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.circuit-chip:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+.circuit-chip.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.35);
+}
+
+.neuron-inspector-card {
+  position: absolute;
+  top: 38px;
+  right: 10px;
+  width: 250px;
+  max-width: calc(100% - 20px);
+  background: rgba(3, 7, 18, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--neon-cyan);
+  border-radius: 6px;
+  padding: 8px 10px;
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+  pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.neuron-inspector-card.hidden {
+  display: none;
+}
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+.inspector-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inspector-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.inspector-close:hover {
+  color: #fff;
+}
+.inspector-meta-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.meta-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.meta-badge.transmitter {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.inspector-desc {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+.inspector-stats {
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.stat-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.stat-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-secondary);
+}
+.stat-val {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+.btn-stimulate {
+  width: 100%;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-stimulate:hover {
+  background: var(--neon-cyan);
+  color: #030712;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+/* Oscilloscope Multi-Mode Tabs */
+.osc-tabs {
+  display: flex;
+  gap: 5px;
+}
+.osc-tab {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.osc-tab:hover {
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+}
+.osc-tab.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.35);
+}
+
+/* Bio-Acoustic Demo Buttons */
+.btn-audio-demo {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-dim);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-audio-demo:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.4);
+}
+
+/* =================== LLM Status Badge =================== */
+.llm-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(51, 65, 85, 0.6);
+  color: #94a3b8;
+  border: 1px solid #334155;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+.llm-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  animation: llmPulse 2.5s ease-in-out infinite;
+}
+@keyframes llmPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(16, 185, 129, 0.55); }
+}
+/* isLLM indicator in history */
+.hist-delta.llm::before {
+  content: '⬡ ';
+  color: #10b981;
 }

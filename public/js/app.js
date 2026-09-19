@@ -1,5 +1,5 @@
-/**
- * FlyWire HR — Main Client Application Orchestrator
+﻿/**
+ * FlyWire HR â€” Main Client Application Orchestrator
  * Integrates Biophysics ODE Loop, Three.js Connectome Viewport,
  * Oscilloscope HUD, Speech/Audio Controller, and Socket.io Gateway.
  */
@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onSpeakingStateChange: (isSpeaking) => {
       if (isSpeaking) {
-        duckingBadge.textContent = '🔇 DUCKED (FLY TALKING)';
+        duckingBadge.textContent = 'ðŸ”‡ DUCKED (FLY TALKING)';
         duckingBadge.classList.add('ducked');
       } else {
-        duckingBadge.textContent = '🎙️ MIC ACTIVE';
+        duckingBadge.textContent = 'ðŸŽ™ï¸ MIC ACTIVE';
         duckingBadge.classList.remove('ducked');
       }
     }
@@ -107,6 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Reset Interview
+  
+  // Bio-Acoustic Demo Buttons
+  const btnPlaySineSong = document.getElementById('btnPlaySineSong');
+  const btnPlayPulseSong = document.getElementById('btnPlayPulseSong');
+  if (btnPlaySineSong) {
+    btnPlaySineSong.addEventListener('click', () => speechAudio.playCourtshipSineSong(2.0));
+  }
+  if (btnPlayPulseSong) {
+    btnPlayPulseSong.addEventListener('click', () => speechAudio.playAgitatedPulseSong(10));
+  }
+
   resetBtn.addEventListener('click', () => {
     socket.emit('reset_interview');
     historyList.innerHTML = '';
@@ -121,7 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
   socket.on('interim_feedback', (data) => {
     if (data.detectedFatal) {
       currentStress = 0.95;
-      currentInputCurrent = 45.0; // Trigger Giant Fiber alert
+      currentInputCurrent = 45.0;
+      speechAudio.playAgitatedPulseSong(4);
     } else if (data.interimReward > 0.4) {
       currentReward = 0.85;
       currentInputCurrent = 12.0;
@@ -130,6 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   socket.on('evaluation_result', (data) => {
     const { evaluation, nextQuestion, questionIndex } = data;
+
+    // Trigger authentic Drosophila acoustic synthesis
+    if (evaluation.giantFiberTriggered || evaluation.stressStimulus > 0.65) {
+      speechAudio.playAgitatedPulseSong(9);
+    } else if (evaluation.rewardStimulus >= 0.60 || evaluation.delta >= 2.0) {
+      speechAudio.playCourtshipSineSong(1.8);
+    }
 
     // Apply biophysical perturbations
     currentStress = evaluation.stressStimulus;
@@ -195,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isNeg = deltaVal < 0;
     div.innerHTML = `
       <span class="hist-time">${timeStr}</span>
-      <span class="hist-delta ${isNeg ? 'negative' : ''}">${deltaText}</span>
+      <span class="hist-delta ${isNeg ? 'negative' : ''}${isLLM ? ' llm' : ''}">${isLLM ? '? ' : ''}${deltaText}</span>
       <span class="hist-text">${critique}</span>
     `;
     historyList.insertBefore(div, historyList.firstChild);
@@ -217,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (let s = 0; s < steps; s++) {
       lastState = biophysics.step(dt, currentInputCurrent, currentStress, currentReward);
-      telemetryHUD.pushVoltage(lastState.membraneVoltage, lastState.giantFiberSpike);
+      telemetryHUD.pushVoltage(lastState.membraneVoltage, lastState.giantFiberSpike, lastState.facilitationU, lastState.vesiclePoolR);
       // Decay input current
       currentInputCurrent = Math.max(0, currentInputCurrent - 0.1);
     }
@@ -245,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
       dlmnHzTagEl.textContent = `WINGBEAT: ${lastState.dlmnFrequency} Hz`;
 
       if (lastState.giantFiberSpike) {
-        apBadgeEl.textContent = '🚨 AP SPIKE: FIRING!';
+        apBadgeEl.textContent = 'ðŸš¨ AP SPIKE: FIRING!';
         apBadgeEl.className = 'ap-badge firing';
       } else {
         apBadgeEl.textContent = 'AP SPIKE: QUIET';
@@ -258,5 +277,86 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(biophysicsLoop);
   }
 
+  
+  // Connectome Inspector & Circuit Chips
+  
+  // Oscilloscope Mode Tabs (Trace vs Matrix vs STF)
+  const oscTabs = document.getElementById('oscTabs');
+  if (oscTabs) {
+    oscTabs.addEventListener('click', (e) => {
+      const tab = e.target.closest('.osc-tab');
+      if (!tab) return;
+      document.querySelectorAll('.osc-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      telemetryHUD.setMode(tab.dataset.mode);
+    });
+  }
+
+  const circuitSelectorBar = document.getElementById('circuitSelectorBar');
+  const neuronInspectorCard = document.getElementById('neuronInspectorCard');
+  const inspectorTitle = document.getElementById('inspectorTitle');
+  const inspectorCloseBtn = document.getElementById('inspectorCloseBtn');
+  const inspectorFlywireId = document.getElementById('inspectorFlywireId');
+  const inspectorTransmitter = document.getElementById('inspectorTransmitter');
+  const inspectorRole = document.getElementById('inspectorRole');
+  const inspectorNeuropil = document.getElementById('inspectorNeuropil');
+  const inspectorSynapses = document.getElementById('inspectorSynapses');
+  const btnStimulateNeuron = document.getElementById('btnStimulateNeuron');
+
+  if (circuitSelectorBar) {
+    circuitSelectorBar.addEventListener('click', (e) => {
+      const chip = e.target.closest('.circuit-chip');
+      if (!chip) return;
+      document.querySelectorAll('.circuit-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const circuitId = chip.dataset.id;
+      connectomeScene.selectNeuron(circuitId);
+    });
+  }
+
+  connectomeScene.onNeuronSelectCallback = (neuron) => {
+    if (!neuronInspectorCard) return;
+    if (neuron) {
+      neuronInspectorCard.classList.remove('hidden');
+      if (inspectorTitle) inspectorTitle.textContent = neuron.displayName || neuron.name;
+      if (inspectorFlywireId) inspectorFlywireId.textContent = `${neuron.system || 'FlyWire'}: ${neuron.flywireId || 'N/A'}`;
+      if (inspectorTransmitter) inspectorTransmitter.textContent = neuron.neurotransmitter || 'Acetylcholine';
+      if (inspectorRole) inspectorRole.textContent = neuron.role || 'Connectome neural pathway.';
+      if (inspectorNeuropil) inspectorNeuropil.textContent = neuron.neuropil || 'Central Brain';
+      if (inspectorSynapses) inspectorSynapses.textContent = neuron.synapses || '350 Pre / 1.2k Post';
+
+      // Synchronize active chip if present
+      document.querySelectorAll('.circuit-chip').forEach(c => {
+        if (c.dataset.id === neuron.name || c.dataset.id === neuron.flywireId) {
+          c.classList.add('active');
+        } else {
+          c.classList.remove('active');
+        }
+      });
+    } else {
+      neuronInspectorCard.classList.add('hidden');
+      document.querySelectorAll('.circuit-chip').forEach(c => {
+        if (c.dataset.id === 'all') c.classList.add('active');
+        else c.classList.remove('active');
+      });
+    }
+  };
+
+  if (inspectorCloseBtn) {
+    inspectorCloseBtn.addEventListener('click', () => {
+      connectomeScene.selectNeuron('all');
+    });
+  }
+
+  if (btnStimulateNeuron) {
+    btnStimulateNeuron.addEventListener('click', () => {
+      currentInputCurrent += 30.0;
+      currentStress = Math.min(1.0, currentStress + 0.35);
+      connectomeScene.injectOptogeneticCurrent(15.0);
+      speechAudio.playAgitatedPulseSong(3);
+    });
+  }
+
   requestAnimationFrame(biophysicsLoop);
 });
+

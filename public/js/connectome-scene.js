@@ -72,12 +72,55 @@ class ConnectomeScene {
       this.controls.target.set(0, -0.1, 0);
     }
     this.renderer.domElement.style.cursor = 'grab';
-    this.renderer.domElement.addEventListener('mousedown', () => {
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+    this.interactiveSomas = [];
+    this.selectedNeuron = null;
+    this.onNeuronSelectCallback = null;
+    this.rawNeurons = [];
+
+    let isDragging = false;
+    let downPos = { x: 0, y: 0 };
+
+    this.renderer.domElement.addEventListener('mousedown', (e) => {
+      isDragging = false;
+      downPos = { x: e.clientX, y: e.clientY };
       this.renderer.domElement.style.cursor = 'grabbing';
     });
-    this.renderer.domElement.addEventListener('mouseup', () => {
-      this.renderer.domElement.style.cursor = 'grab';
+
+    this.renderer.domElement.addEventListener('mousemove', (e) => {
+      const dist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+      if (dist > 5) isDragging = true;
+
+      const rect = this.renderer.domElement.getBoundingClientRect();
+      this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      if (this.interactiveSomas.length > 0 && !isDragging) {
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const hits = this.raycaster.intersectObjects(this.interactiveSomas);
+        if (hits.length > 0) {
+          this.renderer.domElement.style.cursor = 'pointer';
+        } else {
+          this.renderer.domElement.style.cursor = 'grab';
+        }
+      }
     });
+
+    this.renderer.domElement.addEventListener('mouseup', (e) => {
+      this.renderer.domElement.style.cursor = 'grab';
+      if (!isDragging && this.interactiveSomas.length > 0) {
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const hits = this.raycaster.intersectObjects(this.interactiveSomas);
+        if (hits.length > 0) {
+          const neuronData = hits[0].object.userData;
+          this.selectNeuron(neuronData);
+        }
+      }
+    });;
 
     // Balanced Laboratory Lighting for True Chitin Cuticle Colors
     const ambientLight = new THREE.AmbientLight(0x1e293b, 1.8);
@@ -299,16 +342,19 @@ class ConnectomeScene {
   }
 
   renderConnectomeNeurons(neurons) {
+    this.rawNeurons = neurons;
     const colors = [
       0x38bdf8, // Cyan (Acetylcholine / projection neurons)
       0x10b981, // Emerald (Dopamine / reward / Kenyon cells)
       0xf59e0b, // Amber (Octopamine / arousal / antennal lobe)
-      0xec4899, // Neon Pink (GABAergic inhibitory local interneurons)
-      0xef4444  // Crimson (Giant Fiber escape circuit)
+      0xa855f7, // Purple (Central complex ExR2)
+      0xef4444, // Crimson (Giant Fiber escape circuit)
+      0x06b6d4, // Teal (PPL1 Dopamine)
+      0xf97316  // Orange (OA-VUM Octopamine)
     ];
 
     neurons.forEach((neuron, idx) => {
-      const color = colors[idx % colors.length];
+      const color = neuron.colorHex ? parseInt(neuron.colorHex.replace('#', '0x')) : colors[idx % colors.length];
       const positions = new Float32Array(neuron.linePoints);
 
       const lineGeo = new THREE.BufferGeometry();
@@ -324,20 +370,145 @@ class ConnectomeScene {
 
       const lineMesh = new THREE.LineSegments(lineGeo, lineMat);
       this.brainGroup.add(lineMesh);
-      this.neuronLines.push({ mesh: lineMesh, baseColor: color, idx });
 
+      let somaMesh = null;
       if (neuron.soma) {
-        const somaGeo = new THREE.SphereGeometry(neuron.soma.radius * 0.9, 10, 10);
-        const somaMat = new THREE.MeshBasicMaterial({
+        const somaRadius = (neuron.soma.radius || 0.04) * 1.05;
+        const somaGeo = new THREE.SphereGeometry(somaRadius, 14, 14);
+        const somaMat = new THREE.MeshStandardMaterial({
           color: color,
-          transparent: true,
-          opacity: 0.95
+          emissive: color,
+          emissiveIntensity: 0.75,
+          roughness: 0.2,
+          metalness: 0.1
         });
-        const somaMesh = new THREE.Mesh(somaGeo, somaMat);
+        somaMesh = new THREE.Mesh(somaGeo, somaMat);
         somaMesh.position.set(neuron.soma.x, neuron.soma.y, neuron.soma.z);
+        somaMesh.userData = neuron;
         this.brainGroup.add(somaMesh);
+        this.interactiveSomas.push(somaMesh);
+      }
+
+      this.neuronLines.push({ mesh: lineMesh, soma: somaMesh, data: neuron, baseColor: color, idx });
+    });
+
+    this.buildAxonPulses(neurons);
+  }
+
+  /**
+   * Interactive selection of specific neuron arborization and soma
+   */
+  
+  /**
+   * Generates traveling action potential bioluminescent pulses along axonal tracts
+   */
+  buildAxonPulses(neurons) {
+    const pulsesPerNeuron = 8;
+    const totalPulses = neurons.length * pulsesPerNeuron;
+    const pulseGeo = new THREE.SphereGeometry(0.015, 8, 8);
+    const pulseMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.pulseMesh = new THREE.InstancedMesh(pulseGeo, pulseMat, totalPulses);
+    this.pulseData = [];
+
+    neurons.forEach((neuron, nIdx) => {
+      const totalPoints = neuron.linePoints.length / 3;
+      const step = Math.max(1, Math.floor(totalPoints / 80));
+      const waypoints = [];
+      for (let i = 0; i < totalPoints; i += step) {
+        waypoints.push(new THREE.Vector3(
+          neuron.linePoints[i * 3],
+          neuron.linePoints[i * 3 + 1],
+          neuron.linePoints[i * 3 + 2]
+        ));
+      }
+
+      for (let p = 0; p < pulsesPerNeuron; p++) {
+        this.pulseData.push({
+          neuronIdx: nIdx,
+          waypoints,
+          progress: p / pulsesPerNeuron,
+          speed: 0.0035 + (p % 3) * 0.001
+        });
       }
     });
+
+    this.brainGroup.add(this.pulseMesh);
+  }
+
+  selectNeuron(target) {
+    if (!target || target === 'all') {
+      this.selectedNeuron = null;
+      this.neuronLines.forEach((item) => {
+        if (item.mesh && item.mesh.material) {
+          item.mesh.material.opacity = 0.85;
+          item.mesh.material.color.setHex(item.baseColor);
+        }
+        if (item.soma) {
+          item.soma.scale.set(1.0, 1.0, 1.0);
+          item.soma.material.emissiveIntensity = 0.75;
+        }
+      });
+      if (this.onNeuronSelectCallback) this.onNeuronSelectCallback(null);
+      return;
+    }
+
+    const neuronId = typeof target === 'string' ? target : (target.name || target.flywireId);
+    let matched = null;
+
+    this.neuronLines.forEach((item) => {
+      const isMatch = item.data.name === neuronId ||
+                      item.data.flywireId === neuronId ||
+                      item.data.shortName === neuronId ||
+                      item.data === target;
+      if (isMatch) {
+        matched = item.data;
+        this.selectedNeuron = item.data;
+        if (item.mesh && item.mesh.material) {
+          item.mesh.material.opacity = 1.0;
+          item.mesh.material.color.setHex(0xffffff);
+        }
+        if (item.soma) {
+          item.soma.scale.set(1.65, 1.65, 1.65);
+          item.soma.material.emissiveIntensity = 1.4;
+        }
+      } else {
+        if (item.mesh && item.mesh.material) {
+          item.mesh.material.opacity = 0.18;
+          item.mesh.material.color.setHex(item.baseColor);
+        }
+        if (item.soma) {
+          item.soma.scale.set(0.85, 0.85, 0.85);
+          item.soma.material.emissiveIntensity = 0.3;
+        }
+      }
+    });
+
+    if (this.onNeuronSelectCallback && matched) {
+      this.onNeuronSelectCallback(matched);
+    }
+  }
+
+  /**
+   * Optogenetic channelrhodopsin depolarization pulse (+15 nA)
+   */
+  injectOptogeneticCurrent(amount = 15.0) {
+    if (this.selectedNeuron) {
+      const match = this.neuronLines.find(i => i.data === this.selectedNeuron);
+      if (match && match.soma) {
+        match.soma.scale.set(2.2, 2.2, 2.2);
+        setTimeout(() => {
+          if (match.soma) match.soma.scale.set(1.65, 1.65, 1.65);
+        }, 250);
+      }
+    }
+    this.setAnimationState('AGITATED', 800);
+    return { stimulated: true, current: amount };
   }
 
   buildConnectomeNeuropils() {
@@ -518,9 +689,39 @@ class ConnectomeScene {
       this.flyRoot.position.z = 0;
     }
 
+    // 5.5 Axonal Action Potential Traveling Pulses
+    if (this.pulseMesh && this.pulseData) {
+      for (let i = 0; i < this.pulseData.length; i++) {
+        const p = this.pulseData[i];
+        let speedMult = 1.0;
+        if (p.neuronIdx === 4 && this.giantFiberActive) speedMult = 4.5;
+        if (p.neuronIdx === 5 && this.dopamineGlow > 0.4) speedMult = 2.5;
+        if (p.neuronIdx === 6 && this.octopamineGlow > 0.4) speedMult = 2.8;
+
+        p.progress = (p.progress + p.speed * speedMult) % 1.0;
+
+        const waypoints = p.waypoints;
+        if (waypoints.length >= 2) {
+          const totalSegments = waypoints.length - 1;
+          const floatIdx = p.progress * totalSegments;
+          const idx = Math.floor(floatIdx);
+          const frac = floatIdx - idx;
+          const p1 = waypoints[idx];
+          const p2 = waypoints[Math.min(idx + 1, totalSegments)];
+
+          this.dummy.position.lerpVectors(p1, p2, frac);
+          const scale = (this.giantFiberActive && p.neuronIdx === 4) ? 2.2 : 1.0;
+          this.dummy.scale.set(scale, scale, scale);
+          this.dummy.updateMatrix();
+          this.pulseMesh.setMatrixAt(i, this.dummy.matrix);
+        }
+      }
+      this.pulseMesh.instanceMatrix.needsUpdate = true;
+    }
+
     // 6. Action Potential Sparks Animation
     if (this.sparks && this.sparkData) {
-      const dummy = new THREE.Object3D();
+      // Reusing hoisted this.dummy
       for (let i = 0; i < this.sparkData.length; i++) {
         const item = this.sparkData[i];
         item.pos.add(item.vel);

@@ -161,6 +161,7 @@ io.on('connection', (socket) => {
   socket.on('reset_interview', () => {
     lpaEngine.currentLPA = 15.0;
     lpaEngine.history = [];
+    geminiJudge.resetHistory();
     currentQuestion = QUESTIONS[0];
     socket.emit('init', {
       currentLPA: lpaEngine.getCurrentLPA(),

@@ -49,3 +49,19 @@ test('GeminiJudge - sanitizeEvaluation clamps malformed or out-of-bounds LLM ten
   assert.ok(clean.critique.length <= 300, 'Critique truncated to 300 chars max');
   assert.equal(clean.isLLM, true);
 });
+
+test('GeminiJudge - Maintains multi-turn conversation memory and clears on resetHistory', () => {
+  const judge = new GeminiJudge();
+  assert.equal(judge.history.length, 0);
+
+  // Manually push a simulated turn
+  judge.history.push({
+    question: "How do you handle split brain?",
+    answer: "We use Raft with leader leases.",
+    evaluation: { deltaLPA: 5.0, critique: "Good." }
+  });
+  assert.equal(judge.history.length, 1);
+
+  judge.resetHistory();
+  assert.equal(judge.history.length, 0, 'History should be empty after resetHistory()');
+});
