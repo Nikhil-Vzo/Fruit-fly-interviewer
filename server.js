@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const { LPAEngine } = require('./lib/lpa-engine');
+const { GeminiJudge } = require('./lib/gemini-judge');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Standard technical interview question suite
+// Standard technical interview question suite (used as baseline / fallback)
 const QUESTIONS = [
   {
     id: 1,
@@ -41,15 +42,29 @@ io.on('connection', (socket) => {
 
   // Isolated per-candidate interview session (Fixes multi-tenancy singleton bug)
   const lpaEngine = new LPAEngine(15.0);
+  const geminiJudge = new GeminiJudge(process.env.GEMINI_API_KEY || null);
+  let currentQuestion = QUESTIONS[0];
   let lastEvaluationTime = 0;
 
   // Send initial state & first question to this specific candidate
   socket.emit('init', {
     currentLPA: lpaEngine.getCurrentLPA(),
     tier: lpaEngine.getTier(),
-    question: QUESTIONS[0],
+    question: currentQuestion,
     questionIndex: 0,
-    totalQuestions: QUESTIONS.length
+    totalQuestions: QUESTIONS.length,
+    llmActive: geminiJudge.hasApiKey()
+  });
+
+  // Client dynamically configures Google AI Studio API key
+  socket.on('set_gemini_key', (data) => {
+    const key = data && data.key ? String(data.key).trim() : null;
+    geminiJudge.setApiKey(key);
+    console.log(`[Socket.io] Gemini API key updated for ${socket.id}: ${geminiJudge.hasApiKey() ? 'ACTIVE' : 'INACTIVE'}`);
+    socket.emit('llm_status', {
+      active: geminiJudge.hasApiKey(),
+      model: geminiJudge.model
+    });
   });
 
   // Handle interim candidate speech (fast path with length guard)
@@ -59,8 +74,8 @@ io.on('connection', (socket) => {
     socket.emit('interim_feedback', interimAnalysis);
   });
 
-  // Handle final candidate response (authoritative evaluation with DoS protection & rate limit)
-  socket.on('candidate_response', (data) => {
+  // Handle final candidate response (hybrid: Gemini 1.5 Flash -> fallback LPAEngine)
+  socket.on('candidate_response', async (data) => {
     const now = Date.now();
     if (now - lastEvaluationTime < 250) {
       return; // Debounce rapid spam submissions
@@ -69,30 +84,72 @@ io.on('connection', (socket) => {
 
     // Strict input length sanitization (max 4000 characters)
     const text = (data && data.text ? String(data.text).slice(0, 4000) : '');
+    const questionText = currentQuestion ? currentQuestion.prompt : QUESTIONS[0].prompt;
+
+    let evalResult = null;
+    let nextQuestion = null;
+
+    // 1. Try Live Gemini Neural Judge if configured
+    if (geminiJudge.hasApiKey()) {
+      const llmEval = await geminiJudge.evaluateCandidateAnswer(questionText, text, lpaEngine.getCurrentLPA());
+      if (llmEval) {
+        lpaEngine.currentLPA = Math.max(1.2, Math.min(180.0, lpaEngine.currentLPA + llmEval.deltaLPA));
+        const tier = lpaEngine.getTier();
+
+        evalResult = {
+          newLPA: lpaEngine.getCurrentLPA(),
+          delta: llmEval.deltaLPA,
+          tier,
+          critique: llmEval.critique,
+          giantFiberTriggered: llmEval.giantFiberTriggered,
+          stressStimulus: llmEval.octopamineStress,
+          rewardStimulus: llmEval.dopamineReward,
+          aversiveCurrent: llmEval.giantFiberTriggered ? 55.0 : (llmEval.octopamineStress * 15.0),
+          isLLM: true
+        };
+
+        // Dynamic conversational follow-up question
+        nextQuestion = {
+          id: Date.now(),
+          topic: llmEval.followUpTopic || "Architectural Defense",
+          prompt: llmEval.followUpQuestion
+        };
+        currentQuestion = nextQuestion;
+      }
+    }
+
+    // 2. Zero-break heuristic fallback if LLM is unconfigured or failed
+    if (!evalResult) {
+      const analysis = lpaEngine.analyzeContent(text);
+      evalResult = lpaEngine.evaluateResponse(analysis);
+      evalResult.isLLM = false;
+
+      const questionIndex = typeof data?.questionIndex === 'number' ? data.questionIndex : 0;
+      const nextIndex = (questionIndex + 1) % QUESTIONS.length;
+      nextQuestion = QUESTIONS[nextIndex];
+      currentQuestion = nextQuestion;
+    }
+
     const questionIndex = typeof data?.questionIndex === 'number' ? data.questionIndex : 0;
-
-    // Use intelligent concept & rubric analysis
-    const analysis = lpaEngine.analyzeContent(text);
-    const evalResult = lpaEngine.evaluateResponse(analysis);
-
-    const nextIndex = (questionIndex + 1) % QUESTIONS.length;
 
     socket.emit('evaluation_result', {
       evaluation: evalResult,
-      nextQuestion: QUESTIONS[nextIndex],
-      questionIndex: nextIndex
+      nextQuestion,
+      questionIndex: questionIndex + 1
     });
   });
 
   socket.on('reset_interview', () => {
     lpaEngine.currentLPA = 15.0;
     lpaEngine.history = [];
+    currentQuestion = QUESTIONS[0];
     socket.emit('init', {
       currentLPA: lpaEngine.getCurrentLPA(),
       tier: lpaEngine.getTier(),
       question: QUESTIONS[0],
       questionIndex: 0,
-      totalQuestions: QUESTIONS.length
+      totalQuestions: QUESTIONS.length,
+      llmActive: geminiJudge.hasApiKey()
     });
   });
 

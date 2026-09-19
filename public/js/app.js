@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLPAUI(evaluation.newLPA, evaluation.delta, evaluation.tier, deltaStr);
 
     // Append to Audit Log
-    addHistoryEntry(deltaStr, evaluation.delta, evaluation.critique);
+    addHistoryEntry(deltaStr, evaluation.delta, evaluation.critique, evaluation.isLLM);
 
     // Speak critique with Formant Insect Voice (Audio Ducking protected)
     speechAudio.speak(evaluation.critique, () => {
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     questionPromptEl.textContent = q.prompt;
   }
 
-  function addHistoryEntry(deltaText, deltaVal, critique) {
+  function addHistoryEntry(deltaText, deltaVal, critique, isLLM = false) {
     const now = new Date();
     const timeStr = `${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     const div = document.createElement('div');

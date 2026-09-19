@@ -8,6 +8,12 @@ A real-time technical mock interviewer powered by authentic *Drosophila melanoga
 
 ## Key Highlights
 
+- **Phase 2 Live LLM Neural Judge (Google AI Studio Gemini 1.5 Flash)**:
+  - Supports entering a free Google AI Studio API key to unlock dynamic conversational grilling.
+  - Generates structured biophysical tensors (`dopamineReward`, `octopamineStress`, `giantFiberTriggered`, `deltaLPA`).
+  - Dynamically invents targeted follow-up questions based on the candidate's exact architectural claims.
+  - Zero-break automatic fallback to local heuristic engine if API key is unconfigured.
+
 - **Pure Biophysical Dynamical System (24 Coupled ODEs)**:
   - **Izhikevich Giant Fiber Escape Interneuron**: Real-time non-linear membrane potential ($V, u$) with canonical $+30\text{ mV}$ spike peak reset ($c = -60\text{ mV}, d = 8.0$):
     $\frac{dv}{dt} = 0.04v^2 + 5v + 140 - u + I_{\text{syn}}$
@@ -62,7 +68,7 @@ cd Fruit-fly-interviewer
 # Install dependencies
 npm install
 
-# Run unit tests (19 passing biophysical, LPA, and multi-tenancy tests)
+# Run unit tests (23 passing biophysical, LPA, Gemini fallback, and multi-tenancy tests)
 npm test
 
 # Launch the server
