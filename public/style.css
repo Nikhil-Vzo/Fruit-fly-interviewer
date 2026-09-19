@@ -864,3 +864,19 @@ body {
   content: '⬡ ';
   color: #10b981;
 }
+
+/* Fly brain evaluated entry indicator */
+.hist-delta.fly::before {
+  content: '🪰 ';
+}
+.llm-badge.active {
+  /* Override with fly color */
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border-color: #7c3aed;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
+}
+@keyframes llmPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 18px rgba(139, 92, 246, 0.6); }
+}

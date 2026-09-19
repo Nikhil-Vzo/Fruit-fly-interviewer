@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLPAUI(evaluation.newLPA, evaluation.delta, evaluation.tier, deltaStr);
 
     // Append to Audit Log
-    addHistoryEntry(deltaStr, evaluation.delta, evaluation.critique, evaluation.isLLM);
+    addHistoryEntry(deltaStr, evaluation.delta, evaluation.critique, evaluation.isLLM, evaluation.isFlyBrain);
 
     // Speak critique with Formant Insect Voice (Audio Ducking protected)
     speechAudio.speak(evaluation.critique, () => {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     questionPromptEl.textContent = q.prompt;
   }
 
-  function addHistoryEntry(deltaText, deltaVal, critique, isLLM = false) {
+  function addHistoryEntry(deltaText, deltaVal, critique, isLLM = false, isFlyBrain = false) {
     const now = new Date();
     const timeStr = `${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     const div = document.createElement('div');
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isNeg = deltaVal < 0;
     div.innerHTML = `
       <span class="hist-time">${timeStr}</span>
-      <span class="hist-delta ${isNeg ? 'negative' : ''}${isLLM ? ' llm' : ''}">${isLLM ? '? ' : ''}${deltaText}</span>
+      <span class="hist-delta ${isNeg ? 'negative' : ''}${isLLM ? ' llm' : (isFlyBrain ? ' fly' : '')}">${isLLM ? '? ' : isFlyBrain ? '?? ' : ''}${deltaText}</span>
       <span class="hist-text">${critique}</span>
     `;
     historyList.insertBefore(div, historyList.firstChild);
