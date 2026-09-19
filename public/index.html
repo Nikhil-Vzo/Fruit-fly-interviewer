@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyWire HR — Drosophila Connectome Real-Time LPA Interviewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="crt-overlay"></div>
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-icon">🪰⚡</div>
+      <div>
+        <h1>FLYWIRE HR <span class="badge">CONNECTOME v2.4</span></h1>
+        <p class="subtitle">Drosophila Biophysical Electrophysiology & Market LPA Evaluator</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-indicator live"><span class="dot"></span> SYNAPTIC BUS ACTIVE</div>
+      <button id="resetBtn" class="btn-secondary">Reset Evaluation</button>
+    </div>
+  </header>
+
+  <main class="dashboard-grid">
+    <!-- LEFT PANEL: CONNECTOME BIOPHYSICS LABORATORY -->
+    <section class="panel panel-left">
+      <div class="panel-header">
+        <h2>🔬 CONNECTOME LABORATORY TELEMETRY</h2>
+        <span class="sub-badge">68-NEURON BIOPHYSICAL ODE</span>
+      </div>
+
+      <!-- 3D Three.js Viewport -->
+      <div class="viewport-wrapper">
+        <div id="threeContainer" class="three-container"></div>
+        <div class="viewport-overlay">
+          <div class="overlay-tag" id="flyMoodTag">MOOD: ATTENTIVE (IDLE)</div>
+          <div class="overlay-tag-right" id="dlmnHzTag">WINGBEAT: 120.0 Hz</div>
+        </div>
+      </div>
+
+      <!-- Oscilloscope & Quantitative Metrics -->
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <div class="card-title">VESICLE TURNOVER</div>
+          <div class="card-value" id="vesicleHz">850 <span class="unit">Hz</span></div>
+          <div class="card-desc">Quantal release frequency</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="card-title">GIANT FIBER Vm</div>
+          <div class="card-value" id="membraneVm">-65.0 <span class="unit">mV</span></div>
+          <div class="card-desc">Threshold: -38mV | Peak: +30mV</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="card-title">OCTOPAMINE (STRESS)</div>
+          <div class="card-value stress" id="octLevel">5.0%</div>
+          <div class="progress-bar"><div id="octBar" class="bar-fill stress"></div></div>
+        </div>
+        <div class="telemetry-card">
+          <div class="card-title">DOPAMINE (REWARD)</div>
+          <div class="card-value reward" id="daLevel">5.0%</div>
+          <div class="progress-bar"><div id="daBar" class="bar-fill reward"></div></div>
+        </div>
+      </div>
+
+      <!-- Oscilloscope Canvas -->
+      <div class="oscilloscope-wrapper">
+        <div class="oscilloscope-header">
+          <span>GIANT FIBER MEMBRANE POTENTIAL (TRACE)</span>
+          <span id="apBadge" class="ap-badge">AP SPIKE: QUIET</span>
+        </div>
+        <canvas id="oscCanvas" class="osc-canvas"></canvas>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: TECHNICAL INTERVIEW & LIVE LPA TICKER -->
+    <section class="panel panel-right">
+      <div class="panel-header">
+        <h2>💼 TECHNICAL ASSESSMENT & CTC ENGINE</h2>
+        <span class="sub-badge" id="questionProgress">Q 1 OF 4</span>
+      </div>
+
+      <!-- Hero LPA Display -->
+      <div class="lpa-hero-card">
+        <div class="lpa-header">PROJECTED MARKET COMPENSATION</div>
+        <div class="lpa-value-row">
+          <span class="lpa-currency">₹</span>
+          <span id="lpaValue" class="lpa-digits">15.00</span>
+          <span class="lpa-unit">LPA</span>
+        </div>
+        <div id="lpaDeltaTag" class="lpa-delta-tag neutral">STARTING BASELINE</div>
+        <div class="tier-pill" id="tierBadge">Mid Product Tier</div>
+        <p class="tier-desc" id="tierDesc">Solid backend / distributed systems engineer at profitable unicorn</p>
+      </div>
+
+      <!-- Interview Question Area -->
+      <div class="interview-box">
+        <div class="interviewer-header">
+          <span class="interviewer-avatar">🪰</span>
+          <div>
+            <div class="interviewer-name">Dr. Drosophila (Lead Connectome Recruiter)</div>
+            <div class="question-topic" id="questionTopic">Distributed Systems & Consistency</div>
+          </div>
+        </div>
+        <p class="question-prompt" id="questionPrompt">Loading interview prompt...</p>
+      </div>
+
+      <!-- Candidate Input & Speech Stream -->
+      <div class="input-section">
+        <div class="voice-controls">
+          <button id="micBtn" class="btn-mic">
+            <span class="mic-icon">🎙️</span>
+            <span id="micText">START SPEAKING</span>
+          </button>
+          <div class="ducking-indicator" id="duckingBadge">MIC ACTIVE</div>
+        </div>
+
+        <div class="transcript-display" id="transcriptBox">
+          <span class="placeholder-text">Click "Start Speaking" or type below to answer...</span>
+        </div>
+
+        <form id="textForm" class="text-input-form">
+          <input type="text" id="textInput" placeholder="Type technical explanation or system architecture..." autocomplete="off">
+          <button type="submit" class="btn-submit">Submit Answer</button>
+        </form>
+      </div>
+
+      <!-- Salary History Transaction Log -->
+      <div class="history-section">
+        <div class="history-title">SALARY EVALUATION AUDIT LOG</div>
+        <div class="history-list" id="historyList">
+          <div class="history-item">
+            <span class="hist-time">00:00</span>
+            <span class="hist-delta">+0.0 LPA</span>
+            <span class="hist-text">Interview initialized. Baseline CTC set to 15.0 LPA.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Load Local Scripts -->
+  <script src="js/biophysics-engine.js"></script>
+  <script src="js/lpa-engine.js"></script>
+  <script src="js/telemetry-hud.js"></script>
+  <script src="js/connectome-scene.js"></script>
+  <script src="js/speech-audio.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

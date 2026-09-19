@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Planning & Brainstorming session artifacts
+.superpowers/
+docs/
+results*
+*.txt
+tools/
+
+# Logs and environment
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
