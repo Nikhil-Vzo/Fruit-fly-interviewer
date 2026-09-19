@@ -1,9 +1,8 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 
 # Planning & Brainstorming session artifacts
 .superpowers/
-docs/
 results*
 *.txt
 tools/
@@ -15,3 +14,4 @@ tools/
 !.env.example
 .DS_Store
 Thumbs.db
+
