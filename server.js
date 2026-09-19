@@ -2,6 +2,25 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
+// Native .env parser (zero external dependencies)
+const envFile = path.join(__dirname, '.env');
+if (fs.existsSync(envFile)) {
+  const envLines = fs.readFileSync(envFile, 'utf8').split('\n');
+  for (const line of envLines) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const k = trimmed.slice(0, eqIdx).trim();
+        const v = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        if (!process.env[k]) process.env[k] = v;
+      }
+    }
+  }
+  console.log('[FlyWire HR] Loaded environment from .env');
+}
+
 const { LPAEngine } = require('./lib/lpa-engine');
 const { GeminiJudge } = require('./lib/gemini-judge');
 
